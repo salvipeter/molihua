@@ -7,7 +7,7 @@
 (define write-controls? #t)
 (define write-patches? #t)
 
-;(load "molihua.scm")                      ; reload functions (only for debugging)
+(load "molihua.scm")                      ; reload functions (only for debugging)
 (load-model filename)
 
 (when write-offsets?

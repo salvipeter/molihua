@@ -1,4 +1,4 @@
-(define filename "cube.obj")
+(define filename "torus.obj")
 (define fullness 0.5)
 (define tangent-scale 1.4)
 (define write-offsets #t)
@@ -70,6 +70,13 @@
   (let loop ((a a))
     (cond ((null? a) #f)
           ((memq (car a) b) (car a))
+          (else (loop (cdr a))))))
+
+(define (common-elements a b)
+  (let loop ((a a))
+    (cond ((null? a) '())
+          ((memq (car a) b)
+           (cons (car a) (loop (cdr a))))
           (else (loop (cdr a))))))
 
 (define (disjoint? a b)
@@ -167,11 +174,32 @@
   (set! vertices (car model))
   (set! faces (cdr model)))
 
+;;; Moves the adjacent face to the beginning
+(define (select-adjacent face lst)
+  (let loop ((lst lst) (acc '()))
+    (cond ((null? lst)
+           (error "cannot find adjacent face"))
+          ((= (length (common-elements (vector-ref faces face)
+                                       (vector-ref faces (car lst))))
+              2)
+           (cons (car lst) (append acc (cdr lst))))
+          (else
+           (loop (cdr lst) (cons (car lst) acc))))))
+
+;;; Permute the list of faces to be cyclic
+(define (fix-order faces)
+  (let loop ((lst faces))
+    (if (null? (cdr lst))
+        lst
+        (cons (car lst)
+              (loop (select-adjacent (car lst) (cdr lst)))))))
+
 ;;; Generate topology information
 (define vertex-faces
   (do ((result (make-vector (vector-length vertices) '()))
        (i 0 (+ i 1)))
-      ((= i (vector-length faces)) result)
+      ((= i (vector-length faces))
+       (vector-map fix-order result))
     (for-each (lambda (v)
                 (vector-set! result v
                              (cons i (vector-ref result v))))

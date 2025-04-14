@@ -1,11 +1,10 @@
-(define filename "cube1.obj")
-(define fullness 0.5)
-(define tangent-scale 1.4)
-(define only-one-patch #f)
-(define write-offsets #t)
-(define write-chamfers #t)
-(define write-controls #t)
-(define write-patches #t)
+;;; Global variables
+(define vertices #f)
+(define faces #f)
+(define offset-vertices #f)
+(define offset-faces #f)
+(define vertex-faces #f)
+(define ribbons #f)
 
 
 ;;; R7RS compatibility
@@ -26,7 +25,7 @@
   (gambit))
 
 
-;;; Utilities
+;;; General utilities
 
 ;;; Brings the last element to the beginning
 (define (rotate lst)
@@ -121,6 +120,116 @@
                                     (- (string->number s) 1))
                                   (cdr (split-string line)))))
                    (set! f (cons face f))))))))))
+
+(define (write-offsets filename)
+  (with-output-to-file filename
+    (lambda ()
+      (vector-for-each
+       (lambda (v)
+         (display "v")
+         (for-each (lambda (xyz)
+                     (display " ")
+                     (display xyz))
+                   v)
+         (newline))
+       offset-vertices)
+      (let ((write-face (lambda (face)
+                          (display "f")
+                          (for-each (lambda (v)
+                                      (display " ")
+                                      (display (+ v 1)))
+                                    face)
+                          (newline))))
+        (if only-one-patch
+            (write-face (vector-ref offset-faces only-one-patch))
+            (vector-for-each write-face offset-faces))))))
+
+(define (write-chamfers filename)
+  (with-output-to-file filename
+    (lambda ()
+      (vector-for-each
+       (lambda (v)
+         (display "v")
+         (for-each (lambda (xyz)
+                     (display " ")
+                     (display xyz))
+                   v)
+         (newline))
+       offset-vertices)
+      (let ((write-chamfer (lambda (i)
+                             (display "f")
+                             (for-each (lambda (v)
+                                         (display " ")
+                                         (display (+ v 1)))
+                                       (chamfer i))
+                             (newline))))
+        (if only-one-patch
+            (for-each write-chamfer (vector-ref faces only-one-patch))
+            (do ((i 0 (+ i 1)))
+                ((= i (vector-length vertices)))
+              (write-chamfer i)))))))
+
+(define (write-controls filename)
+  (with-output-to-file filename
+    (lambda ()
+      (do ((index 0)
+           (i 0 (+ i 1)))
+          ((= i (vector-length faces)))
+        (when (or (not only-one-patch)
+                  (= only-one-patch i))
+          (for-each (lambda (ribbon)
+                      (for-each (lambda (vertex)
+                                  (display "v")
+                                  (for-each (lambda (xyz)
+                                              (display " ")
+                                              (display xyz))
+                                            vertex)
+                                  (newline))
+                                (append (car ribbon) (cdr ribbon)))
+                      (let ((line (lambda (indices)
+                                    (display "l")
+                                    (for-each (lambda (v)
+                                                (display " ")
+                                                (display (+ index v)))
+                                              indices)
+                                    (newline))))
+                        (line '(1 2 3 4))
+                        (line '(5 6 7 8))
+                        (line '(1 5))
+                        (line '(2 6))
+                        (line '(3 7))
+                        (line '(4 8))
+                        (set! index (+ index 8))))
+                    (vector-ref ribbons i)))))))
+
+(define (write-patches filename-prefix)
+  (do ((index 0)
+       (i 0 (+ i 1)))
+      ((= i (vector-length faces)))
+    (when (or (not only-one-patch)
+              (= only-one-patch i))
+      (with-output-to-file
+          (string-append filename-prefix (number->string (+ i 1)) ".mp")
+        (lambda ()
+          (let ((n (length (vector-ref faces i)))
+                (write-curve (lambda (cpts)
+                               (display "3 4")
+                               (newline)
+                               (display "0 0 0 0 1 1 1 1")
+                               (newline)
+                               (for-each (lambda (vertex)
+                                           (for-each (lambda (xyz)
+                                                       (display xyz)
+                                                       (display " "))
+                                                     vertex)
+                                           (newline))
+                                         cpts))))
+            (display n)
+            (newline)
+            (for-each (lambda (ribbon)
+                        (write-curve (car ribbon))
+                        (write-curve (cdr ribbon)))
+                      (vector-ref ribbons i))))))))
 
 
 ;;; Geometry procedures
@@ -222,15 +331,21 @@
       (vector-set! rfaces i (range index (+ index n)))
       (set! index (+ index n)))))
 
-
-;;; Main code
+(define (update-topology)
+  (set! vertex-faces
+    (do ((result (make-vector (vector-length vertices) '()))
+         (i 0 (+ i 1)))
+        ((= i (vector-length faces))
+         (vector-map fix-order result))
+      (for-each (lambda (v)
+                  (vector-set! result v
+                               (cons i (vector-ref result v))))
+                (vector-ref faces i)))))
 
-;;; Read input cage
-(define vertices #f)
-(define faces #f)
-(let ((model (read-obj filename)))
-  (set! vertices (car model))
-  (set! faces (cdr model)))
+(define (update-offsets)
+  (let ((offsets (generate-offsets vertices faces)))
+    (set! offset-vertices (car offsets))
+    (set! offset-faces (cdr offsets))))
 
 ;;; Moves the adjacent face to the beginning
 (define (select-adjacent face lst)
@@ -252,50 +367,6 @@
         (cons (car lst)
               (loop (select-adjacent (car lst) (cdr lst)))))))
 
-;;; Generate topology information
-(define vertex-faces
-  (do ((result (make-vector (vector-length vertices) '()))
-       (i 0 (+ i 1)))
-      ((= i (vector-length faces))
-       (vector-map fix-order result))
-    (for-each (lambda (v)
-                (vector-set! result v
-                             (cons i (vector-ref result v))))
-              (vector-ref faces i))))
-
-;;; Create offset faces
-(define offset-vertices #f)
-(define offset-faces #f)
-(let ((offsets (generate-offsets vertices faces)))
-  (set! offset-vertices (car offsets))
-  (set! offset-faces (cdr offsets)))
-
-
-;;; Generate output
-
-(when write-offsets
-  (with-output-to-file "/tmp/offsets.obj"
-    (lambda ()
-      (vector-for-each
-       (lambda (v)
-         (display "v")
-         (for-each (lambda (xyz)
-                     (display " ")
-                     (display xyz))
-                   v)
-         (newline))
-       offset-vertices)
-      (let ((write-face (lambda (face)
-                          (display "f")
-                          (for-each (lambda (v)
-                                      (display " ")
-                                      (display (+ v 1)))
-                                    face)
-                          (newline))))
-        (if only-one-patch
-            (write-face (vector-ref offset-faces only-one-patch))
-            (vector-for-each write-face offset-faces))))))
-
 ;;; Returns the chamfer associated with the v-th vertex.
 ;;; The result is a list of indices to offset-vertices.
 (define (chamfer v)
@@ -303,31 +374,6 @@
          (list-ref (vector-ref offset-faces f)
                    (find-index v (vector-ref faces f))))
        (vector-ref vertex-faces v)))
-
-(when write-chamfers
-  (with-output-to-file "/tmp/chamfers.obj"
-    (lambda ()
-      (vector-for-each
-       (lambda (v)
-         (display "v")
-         (for-each (lambda (xyz)
-                     (display " ")
-                     (display xyz))
-                   v)
-         (newline))
-       offset-vertices)
-      (let ((write-chamfer (lambda (i)
-                             (display "f")
-                             (for-each (lambda (v)
-                                         (display " ")
-                                         (display (+ v 1)))
-                                       (chamfer i))
-                             (newline))))
-        (if only-one-patch
-            (for-each write-chamfer (vector-ref faces only-one-patch))
-            (do ((i 0 (+ i 1)))
-                ((= i (vector-length vertices)))
-              (write-chamfer i)))))))
 
 ;;; At vertex j with chamfer c0, find the face connecting to chamfer c1,
 ;;; which is the opposite of face i (i.e., not face i).
@@ -378,66 +424,27 @@
     (cons (list m0 e0 e1 m1)
           (list f0 o0 o1 f1))))
 
-(when write-controls
-  (with-output-to-file "/tmp/controls.obj"
-    (lambda ()
-      (do ((index 0)
-           (i 0 (+ i 1)))
-          ((= i (vector-length faces)))
-        (when (or (not only-one-patch)
-                  (= only-one-patch i))
-          (do ((j 0 (+ j 1)))
-              ((= j (length (vector-ref faces i))))
-            (let ((ribbon (generate-ribbon i j)))
-              (for-each (lambda (vertex)
-                          (display "v")
-                          (for-each (lambda (xyz)
-                                      (display " ")
-                                      (display xyz))
-                                    vertex)
-                          (newline))
-                        (append (car ribbon) (cdr ribbon)))
-              (let ((line (lambda (indices)
-                            (display "l")
-                            (for-each (lambda (v)
-                                        (display " ")
-                                        (display (+ index v)))
-                                      indices)
-                            (newline))))
-                (line '(1 2 3 4))
-                (line '(5 6 7 8))
-                (line '(1 5))
-                (line '(2 6))
-                (line '(3 7))
-                (line '(4 8))
-                (set! index (+ index 8))))))))))
+(define (fix-continuity ribbons)
+  ribbons)                              ; TODO
 
-(when write-patches
-  (do ((index 0)
-       (i 0 (+ i 1)))
-      ((= i (vector-length faces)))
-    (when (or (not only-one-patch)
-              (= only-one-patch i))
-      (with-output-to-file
-          (string-append "/tmp/patch-" (number->string (+ i 1)) ".mp")
-        (lambda ()
-          (let ((n (length (vector-ref faces i)))
-                (write-curve (lambda (cpts)
-                               (display "3 4")
-                               (newline)
-                               (display "0 0 0 0 1 1 1 1")
-                               (newline)
-                               (for-each (lambda (vertex)
-                                           (for-each (lambda (xyz)
-                                                       (display xyz)
-                                                       (display " "))
-                                                     vertex)
-                                           (newline))
-                                         cpts))))
-            (display n)
-            (newline)
-            (do ((j 0 (+ j 1)))
-                ((= j n))
-              (let ((ribbon (generate-ribbon i j)))
-                (write-curve (car ribbon))
-                (write-curve (cdr ribbon))))))))))
+(define (update-ribbons)
+  (set! ribbons
+    (do ((result (make-vector (vector-length faces)))
+         (i 0 (+ i 1)))
+        ((= i (vector-length faces))
+         (fix-continuity result))
+      (vector-set! result i
+                   (map (lambda (j)
+                          (generate-ribbon i j))
+                        (range 0 (length (vector-ref faces i))))))))
+
+
+;;; Main function
+
+(define (load-model filename)
+  (let ((model (read-obj filename)))
+    (set! vertices (car model))
+    (set! faces (cdr model)))
+  (update-topology)
+  (update-offsets)
+  (update-ribbons))

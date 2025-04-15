@@ -40,11 +40,54 @@ Vector PHGB::postSelection(int selected) {
 void PHGB::movement(int selected, const Vector &pos) {
 }
 
+namespace {
+
+  // Based on the one in OpenMesh's STL reader
+  class CmpVec {
+  public:
+    explicit CmpVec(double eps) : eps(eps) { }
+    bool operator()(const Vector &v0, const Vector &v1) const {
+      if (std::abs(v0[0] - v1[0]) <= eps) {
+        if (std::abs(v0[1] - v1[1]) <= eps)
+          return v0[2] < v1[2] - eps;
+        else
+          return v0[1] < v1[1] - eps;
+      } else
+        return v0[0] < v1[0] - eps;
+    }
+  private:
+    double eps;
+  };
+
+  void mergeMeshes(BaseMesh &m1, const BaseMesh &m2) {
+    CmpVec comp(1e-10);
+    std::map<Vector, BaseMesh::VertexHandle, CmpVec> vmap(comp);
+    std::map<BaseMesh::VertexHandle, BaseMesh::VertexHandle> hmap;
+    for (auto v : m1.vertices())
+      vmap[m1.point(v)] = v;
+    for (auto v : m2.vertices()) {
+      auto it = vmap.find(m2.point(v));
+      if (it != vmap.end())
+        hmap[v] = it->second;
+      else
+        hmap[v] = m1.add_vertex(m2.point(v));
+    }
+    for (auto f : m2.faces()) {
+      std::vector<BaseMesh::VertexHandle> face;
+      for (auto v : f.vertices())
+        face.push_back(hmap.at(v));
+      m1.add_face(face);
+    }
+  }
+
+}
+
 void PHGB::updateBaseMesh() {
   mesh.clear();
   for (auto v : cage.vertices())
     mesh.add_vertex(cage.point(v));
-  // TODO: call libcdgbs
+  // for (const auto &patch : patches)
+  //   mergeMeshes(mesh, generateGBMesh(patch));
   Object::updateBaseMesh(false, false);
 }
 

@@ -16,7 +16,17 @@ PHGB::~PHGB() {
 void PHGB::draw(const Visualization &vis) const {
   Object::draw(vis);
   if (vis.show_control_points) {
-    // TODO: draw cage
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0);
+    glColor3d(0.3, 0.3, 1.0);
+    for (auto f : cage.faces()) {
+      glBegin(GL_LINE_LOOP);
+      for (auto v : f.vertices())
+        glVertex3dv(cage.point(v).data());
+      glEnd();
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
   }
 }
 
@@ -32,7 +42,8 @@ void PHGB::movement(int selected, const Vector &pos) {
 
 void PHGB::updateBaseMesh() {
   mesh.clear();
-  mesh.add_vertex({0, 0, 0});
+  for (auto v : cage.vertices())
+    mesh.add_vertex(cage.point(v));
   // TODO: call libcdgbs
   Object::updateBaseMesh(false, false);
 }
@@ -68,7 +79,33 @@ SCM dummyHandler(void *, SCM, SCM) {
 bool PHGB::reload() {
   scm_c_catch(SCM_BOOL_T, safeLoad, reinterpret_cast<void *>(const_cast<std::string *>(&filename)),
               dummyHandler, nullptr, errorHandler, nullptr);
-  // TODO: extract cage & ribbons
+
+  // Extract cage
+  SCM vertices = scm_variable_ref(scm_c_lookup("vertices"));
+  SCM faces = scm_variable_ref(scm_c_lookup("faces"));
+  size_t n_vertices = scm_to_uint(scm_vector_length(vertices));
+  size_t n_faces = scm_to_uint(scm_vector_length(faces));
+  std::vector<CageMesh::VertexHandle> handles;
+  for (size_t i = 0; i < n_vertices; ++i) {
+    Vector p;
+    SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
+    for (size_t j = 0; j < 3; ++j)
+      p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
+    handles.push_back(cage.add_vertex(p));
+  }
+  for (size_t i = 0; i < n_faces; ++i) {
+    SCM lst = scm_vector_ref(faces, scm_from_uint(i));
+    size_t n = scm_to_uint(scm_length(lst));
+    std::vector<CageMesh::VertexHandle> face;
+    for (size_t j = 0; j < n; ++j)
+      face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
+    cage.add_face(face);
+  }
+  
+  // Extract ribbons
+  SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
+  // TODO
+
   updateBaseMesh();
   return true;
 }

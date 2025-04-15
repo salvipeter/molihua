@@ -104,7 +104,24 @@ bool PHGB::reload() {
   
   // Extract ribbons
   SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
-  // TODO
+  patches.resize(n_faces);
+  for (size_t i = 0; i < n_faces; ++i) {
+    SCM lst = scm_vector_ref(ribbons, scm_from_uint(i));
+    size_t n = scm_to_uint(scm_length(lst));
+    patches[i].resize(n);
+    for (size_t j = 0; j < n; ++j) {
+      SCM ribbon = scm_list_ref(lst, scm_from_uint(j));
+      std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
+      for (size_t k = 0; k < 2; ++k) {
+        patches[i][j][k].resize(4);
+        for (size_t l = 0; l <= 3; ++l) {
+          SCM point = scm_list_ref(curves[k], scm_from_uint(l));
+          for (size_t c = 0; c < 3; ++c)
+            patches[i][j][k][l][c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+        }
+      }
+    }
+  }
 
   updateBaseMesh();
   return true;

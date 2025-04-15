@@ -18,7 +18,7 @@ private:
   using CageMesh = OpenMesh::PolyMesh_ArrayKernelT<BaseTraits>;
   CageMesh cage;
   using Curve = std::vector<Vector>;
-  using Ribbon = std::pair<Curve, Curve>;
+  using Ribbon = std::array<Curve, 2>;
   using Patch = std::vector<Ribbon>;
   std::vector<Patch> patches;
 };

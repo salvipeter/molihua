@@ -1,6 +1,6 @@
 (define filename "cube1.obj")
-(define fullness 0.5)
-(define tangent-scale 1.4)
+(define fullness 0.7)
+(define tangent-scale 1.33)
 (define only-one-patch #f)
 (define write-offsets? #t)
 (define write-chamfers? #t)
@@ -17,4 +17,5 @@
 (when write-controls?
   (write-controls "/tmp/controls.obj"))
 (when write-patches?
-  (write-patches "/tmp/patch-"))
+  (write-patches-mp "/tmp/patch-")
+  (write-patches-cgb "/tmp/patch-"))

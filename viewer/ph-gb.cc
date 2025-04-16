@@ -1,5 +1,3 @@
-#include <fstream>
-
 #include <libguile.h>
 
 #include <QtWidgets>

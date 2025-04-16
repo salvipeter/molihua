@@ -22,7 +22,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 if(CMAKE_COMPILER_IS_GNUCXX)
-  set(CMAKE_CXX_FLAGS "-Wall -fPIC -Wno-reorder")
+  set(CMAKE_CXX_FLAGS "-Wall -Wno-volatile -fPIC -Wno-reorder")
   set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g -DDEBUG -fsanitize=address")
   set(CMAKE_CXX_FLAGS_RELEASE "-O3 -g -DNDEBUG")
 endif(CMAKE_COMPILER_IS_GNUCXX)
@@ -89,4 +89,4 @@ target_link_libraries(viewer PUBLIC
   Qt6::Xml
   ${QGLVIEWER_LIBRARY}
   ${GUILE_LIBRARIES}
-)
+  )

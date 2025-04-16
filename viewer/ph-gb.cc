@@ -59,7 +59,7 @@ namespace {
     double eps;
   };
 
-  void mergeMeshes(BaseMesh &m1, const BaseMesh &m2) {
+  void mergeMeshes(BaseMesh &m1, const BaseMesh &m2, size_t id) {
     CmpVec comp(1e-10);
     std::map<Vector, BaseMesh::VertexHandle, CmpVec> vmap(comp);
     std::map<BaseMesh::VertexHandle, BaseMesh::VertexHandle> hmap;
@@ -76,7 +76,8 @@ namespace {
       std::vector<BaseMesh::VertexHandle> face;
       for (auto v : f.vertices())
         face.push_back(hmap.at(v));
-      m1.add_face(face);
+      auto fh = m1.add_face(face);
+      m1.data(fh).group = id;
     }
   }
 
@@ -86,8 +87,9 @@ void PHGB::updateBaseMesh() {
   mesh.clear();
   for (auto v : cage.vertices())
     mesh.add_vertex(cage.point(v));
+  // size_t id = 0;
   // for (const auto &patch : patches)
-  //   mergeMeshes(mesh, generateGBMesh(patch));
+  //   mergeMeshes(mesh, generateGBMesh(patch), ++id);
   Object::updateBaseMesh(false, false);
 }
 

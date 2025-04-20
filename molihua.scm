@@ -251,6 +251,29 @@
                 ((= j n) (newline))
               (display 1) (display " "))))))))
 
+(define (write-patches-mgbs filename-prefix)
+  (do ((index 0)
+       (i 0 (+ i 1)))
+      ((= i (vector-length faces)))
+    (when (or (not only-one-patch)
+              (= only-one-patch i))
+      (with-output-to-file
+          (string-append filename-prefix (number->string (+ i 1)) ".mgbs")
+        (lambda ()
+          (let ((n (length (vector-ref faces i))))
+            (display 1) (newline)       ; # of loops
+            (display n) (newline)       ; # of sides
+            (for-each (lambda (ribbon)
+                        (display "3 3 2 0") (newline) ; s-deg h-deg layers ribcp?
+                        (display "0 0 0 0 1 1 1 1") (newline) ; s-knots
+                        (for-each (lambda (p)
+                                    (display (car p)) (display " ")
+                                    (display (cadr p)) (display " ")
+                                    (display (caddr p)) (newline))
+                                  (append (car ribbon) (cdr ribbon))))
+                      (vector-ref ribbons i))
+            (display "400 200") (newline))))))) ; curve-res triangle-res
+
 (define (write-qds ribbons filename)
   (with-output-to-file filename
     (lambda ()

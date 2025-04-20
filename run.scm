@@ -10,4 +10,5 @@
 (write-chamfers "/tmp/chamfers.obj")
 (write-controls "/tmp/controls.obj")
 ;(write-patches-mp "/tmp/patch-")
-(write-patches-cgb "/tmp/patch-")
+;(write-patches-cgb "/tmp/patch-")
+(write-patches-mgbs "/tmp/patch-")

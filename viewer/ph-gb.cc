@@ -2,6 +2,8 @@
 
 #include <QtWidgets>
 
+#include <libcdgbs/SurfGBS.hpp>
+
 #include "ph-gb.hh"
 
 PHGB::PHGB(std::string filename) : Object(filename) {
@@ -57,18 +59,19 @@ namespace {
     double eps;
   };
 
-  void mergeMeshes(BaseMesh &m1, const BaseMesh &m2, size_t id) {
+  template <typename T>
+  void mergeMeshes(BaseMesh &m1, const T &m2, size_t id) {
     CmpVec comp(1e-10);
     std::map<Vector, BaseMesh::VertexHandle, CmpVec> vmap(comp);
-    std::map<BaseMesh::VertexHandle, BaseMesh::VertexHandle> hmap;
+    std::map<typename T::VertexHandle, BaseMesh::VertexHandle> hmap;
     for (auto v : m1.vertices())
       vmap[m1.point(v)] = v;
     for (auto v : m2.vertices()) {
-      auto it = vmap.find(m2.point(v));
+      auto it = vmap.find(Vector(m2.point(v)));
       if (it != vmap.end())
         hmap[v] = it->second;
       else
-        hmap[v] = m1.add_vertex(m2.point(v));
+        hmap[v] = m1.add_vertex(Vector(m2.point(v)));
     }
     for (auto f : m2.faces()) {
       std::vector<BaseMesh::VertexHandle> face;
@@ -82,12 +85,32 @@ namespace {
 }
 
 void PHGB::updateBaseMesh() {
+  size_t resolution = 50;
   mesh.clear();
-  for (auto v : cage.vertices())
-    mesh.add_vertex(cage.point(v));
-  // size_t id = 0;
-  // for (const auto &patch : patches)
-  //   mergeMeshes(mesh, generateGBMesh(patch), ++id);
+  double large = std::numeric_limits<double>::max();
+  Vector box_min(large, large, large), box_max(-large, -large, -large);
+  for (auto v : cage.vertices()) {
+    const auto &p = cage.point(v);
+    mesh.add_vertex(p);
+    box_min.minimize(p);
+    box_max.minimize(p);
+  }
+  double edge_size = (box_max - box_min).norm() / resolution;
+  size_t id = 0;
+  for (const auto &patch : patches) {
+    libcdgbs::Mesh patch_mesh;
+    libcdgbs::SurfGBS surf;
+    std::vector<std::vector<libcdgbs::SurfGBS::Ribbon>> ribbons(1);
+    for (const auto &r : patch) {
+      Geometry::PointVector cpts;
+      for (size_t i = 0; i < r.size(); ++i)
+        for (size_t j = 0; j < 2; ++j)
+          cpts.push_back(Geometry::Point3D(r[j][i].data()));
+      ribbons[0].emplace_back(3, 1, cpts);
+    }
+    surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh);
+    mergeMeshes(mesh, patch_mesh, ++id);
+  }
   Object::updateBaseMesh(false, false);
 }
 

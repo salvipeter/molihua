@@ -12,8 +12,12 @@ if(WITH_JET_FITTING)
 endif(WITH_JET_FITTING)
 find_package(OpenGL REQUIRED)
 find_package(OpenMesh REQUIRED)
+find_package(Eigen3 3.3 REQUIRED NO_MODULE)
 find_package(Qt6 REQUIRED COMPONENTS Core OpenGL OpenGLWidgets Widgets Xml)
 find_package(QGLViewer REQUIRED)
+find_package(LibGeom REQUIRED)
+find_package(Triangle REQUIRED)
+find_package(CDGBS REQUIRED)
 find_package(PkgConfig REQUIRED)
 
 pkg_check_modules(GUILE REQUIRED guile-3.0)
@@ -47,10 +51,14 @@ include_directories(
   ${EIGEN3_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${OPENMESH_INCLUDE_DIR}
+  ${EIGEN3_INCLUDE_DIR}
   ${Qt6OpenGL_INCLUDE_DIRS}
   ${Qt6Widgets_INCLUDE_DIRS}
   ${Qt6Xml_INCLUDE_DIRS}
   ${QGLVIEWER_INCLUDE_DIR}
+  ${LIBGEOM_INCLUDE_DIR}
+  ${TRIANGLE_INCLUDE_DIR}
+  ${CDGBS_INCLUDE_DIR}
   ${GUILE_INCLUDE_DIRS}
   )
 
@@ -88,5 +96,8 @@ target_link_libraries(viewer PUBLIC
   Qt6::Widgets
   Qt6::Xml
   ${QGLVIEWER_LIBRARY}
+  ${LIBGEOM_LIBRARY}
+  ${CDGBS_LIBRARY}
+  ${Triangle_LIBRARIES}
   ${GUILE_LIBRARIES}
   )

@@ -2,7 +2,7 @@
 (define fullness 0.7)
 (define tangent-scale 1.33)
 (define only-one-patch #f)              ; #f or patch index
-(define triangle-size 0.2)
+(define triangle-size 0.05)
 
 (load "molihua.scm")
 (load-model filename)
@@ -30,7 +30,8 @@
                                     ".mgbs /tmp/surf-"
                                     (number->string i)
                                     ".obj "
-                                    (number->string triangle-size))))
+                                    (number->string triangle-size)
+                                    " > /dev/null")))
             indices)
   (shell (apply string-append
                 `("awk -f obj2stl.awk"

@@ -7,6 +7,7 @@ OPENMESH=/usr
 TRIANGLE=$(CDGBS)/build/triangle_build/Triangle
 
 FLAGS=-std=c++20 -Wall -pedantic -O3 -DNDEBUG
+#FLAGS=-std=c++20 -Wall -pedantic -O0 -g -DDEBUG
 INCLUDES=\
 	-I$(CDGBS)/include \
 	-I$(LIBGEOM) \

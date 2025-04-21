@@ -78,23 +78,25 @@ namespace {
       for (auto v : f.vertices())
         face.push_back(hmap.at(v));
       auto fh = m1.add_face(face);
-      m1.data(fh).group = id;
+      if (m1.is_valid_handle(fh))
+        m1.data(fh).group = id;
     }
   }
 
 }
 
 void PHGB::updateBaseMesh() {
-  size_t resolution = 50;
+  size_t resolution = 100;
   mesh.clear();
   double large = std::numeric_limits<double>::max();
   Vector box_min(large, large, large), box_max(-large, -large, -large);
   for (auto v : cage.vertices()) {
     const auto &p = cage.point(v);
-    mesh.add_vertex(p);
     box_min.minimize(p);
-    box_max.minimize(p);
+    box_max.maximize(p);
   }
+  mesh.add_vertex(box_min);
+  mesh.add_vertex(box_max);
   double edge_size = (box_max - box_min).norm() / resolution;
   size_t id = 0;
   for (const auto &patch : patches) {
@@ -103,9 +105,9 @@ void PHGB::updateBaseMesh() {
     std::vector<std::vector<libcdgbs::SurfGBS::Ribbon>> ribbons(1);
     for (const auto &r : patch) {
       Geometry::PointVector cpts;
-      for (size_t i = 0; i < r.size(); ++i)
-        for (size_t j = 0; j < 2; ++j)
-          cpts.push_back(Geometry::Point3D(r[j][i].data()));
+      for (size_t j = 0; j < r[0].size(); ++j)
+        for (size_t i = 0; i < 2; ++i)
+          cpts.push_back(Geometry::Point3D(r[i][j].data()));
       ribbons[0].emplace_back(3, 1, cpts);
     }
     surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh);

@@ -7,10 +7,9 @@ int main(int argc, char **argv) {
               << " <input.mgbs> <output.obj> <target_length>" << std::endl;
     return 1;
   }
-  double target_length = std::atof(argv[3]);
   libcdgbs::Mesh mesh;
   libcdgbs::SurfGBS surf;
-  surf.readMGBS(argv[1]);
+  surf.readMGBS(argv[1], std::atof(argv[3]));
   surf.compute_domain_boundary();
   surf.compute_domain_mesh();
   surf.compute_local_parameters();

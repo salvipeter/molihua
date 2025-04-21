@@ -77,9 +77,9 @@ void Options::fullnessChanged(double full) {
 
 void Options::onePatchChanged(Qt::CheckState state) {
   if (state == Qt::Checked) {
-    selectedBox->setValue(1);
+    // selectedBox->setValue(1);
     selectedBox->setEnabled(true);
-    selectedChanged(1);
+    selectedChanged(selectedBox->value());
   } else {
     selectedBox->setEnabled(false);
     scm_c_define("only-one-patch", SCM_BOOL_F);

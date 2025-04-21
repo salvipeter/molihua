@@ -28,11 +28,6 @@ Window::Window(QApplication *parent) :
   openAction->setStatusTip(tr("Load a model from a file"));
   connect(openAction, &QAction::triggered, [this](){ open(true); });
 
-  auto importAction = new QAction(tr("&Import"), this);
-  importAction->setShortcut(tr("Ctrl+I"));
-  importAction->setStatusTip(tr("Import a model from a file"));
-  connect(importAction, &QAction::triggered, this, [this](){ open(false); });
-
   auto quitAction = new QAction(tr("&Quit"), this);
   quitAction->setShortcut(tr("Ctrl+Q"));
   quitAction->setStatusTip(tr("Quit the program"));
@@ -52,7 +47,6 @@ Window::Window(QApplication *parent) :
 
   auto fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(openAction);
-  fileMenu->addAction(importAction);
   fileMenu->addAction(quitAction);
 
   auto visMenu = menuBar()->addMenu(tr("&Visualization"));
@@ -73,15 +67,11 @@ Window::Window(QApplication *parent) :
 void Window::open(bool clear_others) {
   auto filename =
     QFileDialog::getOpenFileName(this, tr("Open File"), last_directory,
-                                 tr("Readable files (*.obj *.ply *.stl *.bzr *.scm);;"
-                                    "Mesh (*.obj *.ply *.stl);;"
-                                    "Bézier surface (*.bzr);;"
-                                    "Polyhedral GB scripts (*.scm);;"
+                                 tr("Cages (*.obj);;"
                                     "All files (*.*)"));
   if (filename.isEmpty())
     return;
   last_directory = QFileInfo(filename).absolutePath();
-  scm_chdir(scm_from_utf8_string(last_directory.toUtf8().data()));
 
   if (clear_others)
     viewer->deleteObjects();

@@ -1,3 +1,5 @@
+#include <libguile.h>
+
 #include "object.hh"
 
 #ifdef USE_JET_FITTING
@@ -15,6 +17,11 @@ const BaseMesh &Object::baseMesh() const {
 }
 
 void Object::draw(const Visualization &vis) const {
+  SCM onePatch = scm_variable_ref(scm_c_lookup("only-one-patch"));
+  size_t show_only = 0;
+  if (onePatch != SCM_BOOL_F)
+    show_only = scm_to_uint(onePatch);
+
   glPolygonMode(GL_FRONT_AND_BACK,
                 !vis.show_solid && vis.show_wireframe ? GL_LINE : GL_FILL);
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -37,6 +44,8 @@ void Object::draw(const Visualization &vis) const {
       glEnable(GL_TEXTURE_1D);
     }
     for (auto f : mesh.faces()) {
+      if (show_only > 0 && mesh.data(f).group != show_only)
+        continue;
       glBegin(GL_POLYGON);
       for (auto v : f.vertices()) {
         if (vis.type == VisType::MEAN)
@@ -62,6 +71,8 @@ void Object::draw(const Visualization &vis) const {
     glColor3d(0.0, 0.0, 0.0);
     glDisable(GL_LIGHTING);
     for (auto f : mesh.faces()) {
+      if (show_only > 0 && mesh.data(f).group != show_only)
+        continue;
       glBegin(GL_POLYGON);
       for (auto v : f.vertices())
         glVertex3dv(mesh.point(v).data());

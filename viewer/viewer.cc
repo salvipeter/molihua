@@ -1,7 +1,5 @@
 #include <QtGui/QKeyEvent>
 
-#include "bezier.hh"
-#include "mesh.hh"
 #include "ph-gb.hh"
 #include "viewer.hh"
 
@@ -63,13 +61,7 @@ void Viewer::deleteObjects() {
 }
 
 bool Viewer::open(std::string filename) {
-  std::shared_ptr<Object> surface;
-  if (filename.ends_with(".bzr"))
-    surface = std::make_shared<Bezier>(filename);
-  else if (filename.ends_with(".scm"))
-    surface = std::make_shared<PHGB>(filename);
-  else
-    surface = std::make_shared<Mesh>(filename);
+  std::shared_ptr<Object> surface = std::make_shared<PHGB>(filename);
   if (!surface->valid())
     return false;
   objects.push_back(surface);

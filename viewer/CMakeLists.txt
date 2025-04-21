@@ -66,9 +66,7 @@ include_directories(
 add_executable(viewer WIN32
   ${geo_HEADERS_MOC}
   textures.qrc
-  bezier.cc
   main.cc
-  mesh.cc
   object.cc
   options.cc
   ph-gb.cc

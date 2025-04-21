@@ -95,8 +95,6 @@ void PHGB::updateBaseMesh() {
     box_min.minimize(p);
     box_max.maximize(p);
   }
-  mesh.add_vertex(box_min);
-  mesh.add_vertex(box_max);
   double edge_size = (box_max - box_min).norm() / resolution;
   size_t id = 0;
   for (const auto &patch : patches) {

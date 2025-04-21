@@ -4,6 +4,7 @@
 
 #include <QtWidgets>
 
+#include "options.hh"
 #include "window.hh"
 
 Window::Window(QApplication *parent) :
@@ -58,6 +59,15 @@ Window::Window(QApplication *parent) :
   visMenu->addAction(cutoffAction);
   visMenu->addAction(rangeAction);
   visMenu->addAction(slicingAction);
+
+  auto scroll = new QScrollArea();
+  scroll->setWidget(new Options(viewer));
+
+  auto dock = new QDockWidget("Options", this);
+  dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
+  dock->setFeatures(QDockWidget::DockWidgetMovable);
+  dock->setWidget(scroll);
+  addDockWidget(Qt::RightDockWidgetArea, dock);
 }
 
 void Window::open(bool clear_others) {

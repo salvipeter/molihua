@@ -32,6 +32,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 set(geo_HEADERS # headers processed by MOC
+  options.hh
   viewer.hh
   window.hh
   )
@@ -69,6 +70,7 @@ add_executable(viewer WIN32
   main.cc
   mesh.cc
   object.cc
+  options.cc
   ph-gb.cc
   viewer.cc
   visualization.cc

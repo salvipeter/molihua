@@ -14,7 +14,7 @@ PHGB::~PHGB() {
 }
 
 void PHGB::draw(const Visualization &vis) const {
-  Object::draw(vis);
+  // Cage
   if (vis.show_control_points) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
@@ -28,6 +28,71 @@ void PHGB::draw(const Visualization &vis) const {
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
   }
+
+  SCM onePatch = scm_variable_ref(scm_c_lookup("only-one-patch"));
+  size_t show_only = 0;
+  if (onePatch != SCM_BOOL_F)
+    show_only = scm_to_uint(onePatch);
+
+  // Rest as in Object::draw()
+
+  glPolygonMode(GL_FRONT_AND_BACK,
+                !vis.show_solid && vis.show_wireframe ? GL_LINE : GL_FILL);
+  glEnable(GL_POLYGON_OFFSET_FILL);
+  glPolygonOffset(1, 1);
+
+  if (vis.show_solid || vis.show_wireframe) {
+    if (vis.type == VisType::PLAIN)
+      glColor3d(1.0, 1.0, 1.0);
+    else if (vis.type == VisType::ISOPHOTES) {
+      glBindTexture(GL_TEXTURE_2D, vis.current_isophote_texture);
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+      glEnable(GL_TEXTURE_2D);
+      glTexGeni(GL_S, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+      glTexGeni(GL_T, GL_TEXTURE_GEN_MODE, GL_SPHERE_MAP);
+      glEnable(GL_TEXTURE_GEN_S);
+      glEnable(GL_TEXTURE_GEN_T);
+    } else if (vis.type == VisType::SLICING) {
+      glBindTexture(GL_TEXTURE_1D, vis.slicing_texture);
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
+      glEnable(GL_TEXTURE_1D);
+    }
+    for (auto f : mesh.faces()) {
+      if (show_only > 0 && mesh.data(f).group != show_only)
+        continue;
+      glBegin(GL_POLYGON);
+      for (auto v : f.vertices()) {
+        if (vis.type == VisType::MEAN)
+          glColor3dv(vis.colorMap(vis.mean_min, vis.mean_max, mesh.data(v).mean).data());
+        else if (vis.type == VisType::SLICING)
+          glTexCoord1d(mesh.point(v) | vis.slicing_dir * vis.slicing_scaling);
+        glNormal3dv(mesh.normal(v).data());
+        glVertex3dv(mesh.point(v).data());
+      }
+      glEnd();
+    }
+    if (vis.type == VisType::ISOPHOTES) {
+      glDisable(GL_TEXTURE_GEN_S);
+      glDisable(GL_TEXTURE_GEN_T);
+      glDisable(GL_TEXTURE_2D);
+      glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+    } else if (vis.type == VisType::SLICING)
+      glDisable(GL_TEXTURE_1D);
+  }
+
+  if (vis.show_solid && vis.show_wireframe) {
+    glPolygonMode(GL_FRONT, GL_LINE);
+    glColor3d(0.0, 0.0, 0.0);
+    glDisable(GL_LIGHTING);
+    for (auto f : mesh.faces()) {
+      glBegin(GL_POLYGON);
+      for (auto v : f.vertices())
+        glVertex3dv(mesh.point(v).data());
+      glEnd();
+    }
+    glEnable(GL_LIGHTING);
+  }
+  glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
 
 void PHGB::drawWithNames(const Visualization &vis) const {
@@ -86,7 +151,7 @@ namespace {
 }
 
 void PHGB::updateBaseMesh() {
-  size_t resolution = 100;
+  size_t resolution = scm_to_uint(scm_variable_ref(scm_c_lookup("resolution")));
   mesh.clear();
   double large = std::numeric_limits<double>::max();
   Vector box_min(large, large, large), box_max(-large, -large, -large);

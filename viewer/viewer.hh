@@ -22,6 +22,7 @@ public:
   void setSlicingScaling(double scaling);
   void deleteObjects();
   bool open(std::string filename);
+  void reload();
 
 signals:
   void startComputation(QString message);

@@ -78,6 +78,12 @@ bool Viewer::open(std::string filename) {
   return true;
 }
 
+void Viewer::reload() {
+  for (auto o : objects)
+    o->reload();
+  update();
+}
+
 void Viewer::init() {
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
 
@@ -210,9 +216,7 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
   if (e->modifiers() == Qt::NoModifier)
     switch (e->key()) {
     case Qt::Key_R:
-      for (auto o : objects)
-        o->reload();
-      update();
+      reload();
       break;
     case Qt::Key_O:
       if (camera()->type() == qglviewer::Camera::PERSPECTIVE)

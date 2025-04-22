@@ -98,6 +98,6 @@ target_link_libraries(viewer PUBLIC
   ${QGLVIEWER_LIBRARY}
   ${LIBGEOM_LIBRARY}
   ${CDGBS_LIBRARY}
-  ${Triangle_LIBRARIES}
+  ${Triangle_LIBRARY}
   ${GUILE_LIBRARIES}
   )

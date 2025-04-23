@@ -15,7 +15,13 @@ PHGB::~PHGB() {
 
 void PHGB::draw(const Visualization &vis) const {
   Object::draw(vis);
-  if (vis.show_control_points) {
+
+  SCM onePatch = scm_variable_ref(scm_c_lookup("only-one-patch"));
+  size_t show_only = 0;
+  if (onePatch != SCM_BOOL_F)
+    show_only = scm_to_uint(onePatch);
+
+  if (vis.show_cage) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
     glColor3d(0.3, 0.3, 1.0);
@@ -28,6 +34,67 @@ void PHGB::draw(const Visualization &vis) const {
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
   }
+
+  if (vis.show_offsets) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0);
+    glColor3d(1.0, 0.7, 0.0);
+    for (size_t i = 0; i < offset_faces.size(); ++i) {
+      if (show_only > 0 && show_only - 1 != i)
+        continue;
+      const auto &f = offset_faces[i];
+      glBegin(GL_LINE_LOOP);
+      for (auto v : f)
+        glVertex3dv(offset_vertices[v].data());
+      glEnd();
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
+  }
+
+  if (vis.show_chamfers) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4d(1.0, 0.0, 0.7, 0.3);
+    for (const auto &f : chamfers) {
+      glBegin(GL_POLYGON);
+      for (auto v : f)
+        glVertex3dv(offset_vertices[v].data());
+      glEnd();
+    }
+    glDisable(GL_BLEND);
+    glEnable(GL_LIGHTING);
+  }
+
+  if (vis.show_control_points) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0);
+    glColor3d(0.0, 1.0, 0.0);
+    for (size_t i = 0; i < patches.size(); ++i) {
+      if (show_only > 0 && show_only - 1 != i)
+        continue;
+      const auto &patch = patches[i];
+      for (const auto &ribbon : patch) {
+        for (const auto &row : ribbon) {
+          glBegin(GL_LINE_STRIP);
+          for (const auto &p : row)
+            glVertex3dv(p.data());
+          glEnd();
+        }
+        for (size_t j = 0; j < ribbon[0].size(); ++j) {
+          glBegin(GL_LINE_STRIP);
+          glVertex3dv(ribbon[0][j].data());
+          glVertex3dv(ribbon[1][j].data());
+          glEnd();
+        }
+      }
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
+  }
+
 }
 
 void PHGB::drawWithNames(const Visualization &vis) const {
@@ -147,46 +214,83 @@ SCM dummyHandler(void *, SCM, SCM) {
 bool PHGB::reload() {
   scm_c_catch(SCM_BOOL_T, safeLoad, reinterpret_cast<void *>(const_cast<std::string *>(&filename)),
               dummyHandler, nullptr, errorHandler, nullptr);
+  size_t n_vertices, n_faces;
 
   // Extract cage
-  SCM vertices = scm_variable_ref(scm_c_lookup("vertices"));
-  SCM faces = scm_variable_ref(scm_c_lookup("faces"));
-  size_t n_vertices = scm_to_uint(scm_vector_length(vertices));
-  size_t n_faces = scm_to_uint(scm_vector_length(faces));
-  std::vector<CageMesh::VertexHandle> handles;
-  for (size_t i = 0; i < n_vertices; ++i) {
-    Vector p;
-    SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
-    for (size_t j = 0; j < 3; ++j)
-      p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
-    handles.push_back(cage.add_vertex(p));
+  {
+    SCM vertices = scm_variable_ref(scm_c_lookup("vertices"));
+    SCM faces = scm_variable_ref(scm_c_lookup("faces"));
+    n_vertices = scm_to_uint(scm_vector_length(vertices));
+    n_faces = scm_to_uint(scm_vector_length(faces));
+    std::vector<CageMesh::VertexHandle> handles;
+    for (size_t i = 0; i < n_vertices; ++i) {
+      Vector p;
+      SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
+      for (size_t j = 0; j < 3; ++j)
+        p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
+      handles.push_back(cage.add_vertex(p));
+    }
+    for (size_t i = 0; i < n_faces; ++i) {
+      SCM lst = scm_vector_ref(faces, scm_from_uint(i));
+      size_t n = scm_to_uint(scm_length(lst));
+      std::vector<CageMesh::VertexHandle> face;
+      for (size_t j = 0; j < n; ++j)
+        face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
+      cage.add_face(face);
+    }
   }
-  for (size_t i = 0; i < n_faces; ++i) {
-    SCM lst = scm_vector_ref(faces, scm_from_uint(i));
-    size_t n = scm_to_uint(scm_length(lst));
-    std::vector<CageMesh::VertexHandle> face;
-    for (size_t j = 0; j < n; ++j)
-      face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
-    cage.add_face(face);
-  }
-  
+
   // Extract ribbons
-  SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
-  patches.resize(n_faces);
-  for (size_t i = 0; i < n_faces; ++i) {
-    SCM lst = scm_vector_ref(ribbons, scm_from_uint(i));
-    size_t n = scm_to_uint(scm_length(lst));
-    patches[i].resize(n);
-    for (size_t j = 0; j < n; ++j) {
-      SCM ribbon = scm_list_ref(lst, scm_from_uint(j));
-      std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
-      for (size_t k = 0; k < 2; ++k) {
-        patches[i][j][k].resize(4);
-        for (size_t l = 0; l <= 3; ++l) {
-          SCM point = scm_list_ref(curves[k], scm_from_uint(l));
-          for (size_t c = 0; c < 3; ++c)
-            patches[i][j][k][l][c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+  {
+    SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
+    patches.resize(n_faces);
+    for (size_t i = 0; i < n_faces; ++i) {
+      SCM lst = scm_vector_ref(ribbons, scm_from_uint(i));
+      size_t n = scm_to_uint(scm_length(lst));
+      patches[i].resize(n);
+      for (size_t j = 0; j < n; ++j) {
+        SCM ribbon = scm_list_ref(lst, scm_from_uint(j));
+        std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
+        for (size_t k = 0; k < 2; ++k) {
+          patches[i][j][k].resize(4);
+          for (size_t l = 0; l <= 3; ++l) {
+            SCM point = scm_list_ref(curves[k], scm_from_uint(l));
+            for (size_t c = 0; c < 3; ++c)
+              patches[i][j][k][l][c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+          }
         }
+      }
+    }
+  }
+
+  // Extract offsets & chamfers
+  {
+    SCM vertices = scm_variable_ref(scm_c_lookup("offset-vertices"));
+    SCM faces = scm_variable_ref(scm_c_lookup("offset-faces"));
+    size_t n_off_vertices = scm_to_uint(scm_vector_length(vertices));
+    offset_vertices.resize(n_off_vertices);
+    offset_faces.resize(n_faces);
+    chamfers.resize(n_vertices);
+    for (size_t i = 0; i < n_off_vertices; ++i) {
+      auto &p = offset_vertices[i];
+      SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
+      for (size_t j = 0; j < 3; ++j)
+        p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
+    }
+    for (size_t i = 0; i < n_faces; ++i) {
+      SCM lst = scm_vector_ref(faces, scm_from_uint(i));
+      size_t n = scm_to_uint(scm_length(lst));
+      auto &face = offset_faces[i];
+      face.clear();
+      for (size_t j = 0; j < n; ++j)
+        face.push_back(scm_to_uint(scm_list_ref(lst, scm_from_uint(j))));
+    }
+    for (size_t i = 0; i < n_vertices; ++i) {
+      SCM chamfer = scm_c_eval_string(("(chamfer " + std::to_string(i) + ")").c_str());
+      chamfers[i].clear();
+      while (scm_null_p(chamfer) == SCM_BOOL_F) {
+        chamfers[i].push_back(scm_to_uint(scm_car(chamfer)));
+        chamfer = scm_cdr(chamfer);
       }
     }
   }

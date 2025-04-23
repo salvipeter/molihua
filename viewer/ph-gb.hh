@@ -21,4 +21,6 @@ private:
   using Ribbon = std::array<Curve, 2>;
   using Patch = std::vector<Ribbon>;
   std::vector<Patch> patches;
+  std::vector<Vector> offset_vertices;
+  std::vector<std::vector<size_t>> offset_faces, chamfers;
 };

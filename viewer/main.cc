@@ -9,5 +9,7 @@ int main(int argc, char **argv) {
   QApplication app(argc, argv);
   Window window(&app);
   window.show();
+  std::setlocale(LC_ALL, "C");
+  QLocale::setDefault(QLocale(QLocale::English, QLocale::UnitedStates));
   return app.exec();
 }

@@ -451,7 +451,7 @@
 ;;; Assumes that the first corner is not concave
 (define (offset-face verts)
   (let* ((lines (map cons verts (append (cdr verts) (list (car verts)))))
-         (n (out-normal (car lines) (cadr lines)))
+         (n (face-normal verts))
          (points (map (lambda (l)
                         (closest-vertex l (reachable-vertices l verts lines n)))
                       lines))
@@ -535,13 +535,38 @@
         (cons (car lst)
               (loop (select-adjacent (car lst) (cdr lst)))))))
 
+;;; Sum the cross products of each edge endpoints & normalize
+(define (face-normal points)
+  (let ((edges (map cons points (append (cdr points) (list (car points))))))
+    (vnormalize
+     (let loop ((lst edges))
+       (if (null? lst)
+           '(0 0 0)
+           (v+ (cross-product (caar lst) (cdar lst))
+               (loop (cdr lst))))))))
+
 ;;; Returns the chamfer associated with the v-th vertex.
 ;;; The result is a list of indices to offset-vertices.
 (define (chamfer v)
-  (map (lambda (f)
-         (list-ref (vector-ref offset-faces f)
-                   (find-index v (vector-ref faces f))))
-       (vector-ref vertex-faces v)))
+  (let* ((face-indices (vector-ref vertex-faces v))
+         (lst (map (lambda (f)
+                     (list-ref (vector-ref offset-faces f)
+                               (find-index v (vector-ref faces f))))
+                   face-indices))
+         (face (map (lambda (v) (vector-ref vertices v))
+                    (vector-ref faces (car face-indices))))
+         (chamfer-face (map (lambda (v)
+                              (if (pair? v)
+                                  (v* (v+ (vector-ref offset-vertices (car v))
+                                          (vector-ref offset-vertices (cdr v)))
+                                      1/2)
+                                  (vector-ref offset-vertices v)))
+                            lst)))
+    (if (< (scalar-product (face-normal face)
+                           (face-normal chamfer-face))
+           0)
+        (reverse lst)
+        lst)))
 
 ;;; At vertex j with chamfer c0, find the face connecting to chamfer c1,
 ;;; which is the opposite of face i (i.e., not face i).

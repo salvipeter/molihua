@@ -1,7 +1,7 @@
-(define filename "models/L-shape.obj")
+(define filename "models/elretoltkocka.obj")
 (define fullness 0.5)
 (define tangent-scale 1)
-(define only-one-patch 7)
+(define only-one-patch #f)
 (define triangle-size 0.05)
 (define generate-model #f)
 
@@ -11,9 +11,7 @@
 (write-offsets "/tmp/offsets.obj")
 (write-chamfers "/tmp/chamfers.obj")
 (write-controls "/tmp/controls.obj")
-;(write-patches-mp "/tmp/patch-")
-;(write-patches-cgb "/tmp/patch-")
-;(write-patches-mgbs "/tmp/patch-")
+(write-patches-mgbs "/tmp/patch-")
 
 
 

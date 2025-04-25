@@ -282,14 +282,25 @@ bool PHGB::reload() {
       size_t n = scm_to_uint(scm_length(lst));
       auto &face = offset_faces[i];
       face.clear();
-      for (size_t j = 0; j < n; ++j)
-        face.push_back(scm_to_uint(scm_list_ref(lst, scm_from_uint(j))));
+      for (size_t j = 0; j < n; ++j) {
+        SCM index = scm_list_ref(lst, scm_from_uint(j));
+        if (scm_is_pair(index)) {
+          face.push_back(scm_to_uint(scm_car(index)));
+          face.push_back(scm_to_uint(scm_cdr(index)));
+        } else
+          face.push_back(scm_to_uint(index));
+      }
     }
     for (size_t i = 0; i < n_vertices; ++i) {
       SCM chamfer = scm_c_eval_string(("(chamfer " + std::to_string(i) + ")").c_str());
       chamfers[i].clear();
       while (scm_null_p(chamfer) == SCM_BOOL_F) {
-        chamfers[i].push_back(scm_to_uint(scm_car(chamfer)));
+        SCM index = scm_car(chamfer);
+        if (scm_is_pair(index)) {
+          chamfers[i].push_back(scm_to_uint(scm_car(index)));
+          chamfers[i].push_back(scm_to_uint(scm_cdr(index)));
+        } else
+          chamfers[i].push_back(scm_to_uint(index));
         chamfer = scm_cdr(chamfer);
       }
     }

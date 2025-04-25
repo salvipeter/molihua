@@ -297,8 +297,8 @@ bool PHGB::reload() {
       while (scm_null_p(chamfer) == SCM_BOOL_F) {
         SCM index = scm_car(chamfer);
         if (scm_is_pair(index)) {
-          chamfers[i].push_back(scm_to_uint(scm_car(index)));
           chamfers[i].push_back(scm_to_uint(scm_cdr(index)));
+          chamfers[i].push_back(scm_to_uint(scm_car(index)));
         } else
           chamfers[i].push_back(scm_to_uint(index));
         chamfer = scm_cdr(chamfer);

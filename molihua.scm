@@ -170,9 +170,9 @@
                              (for-each (lambda (v)
                                          (cond ((pair? v)
                                                 (display " ")
-                                                (display (+ (car v) 1))
+                                                (display (+ (cdr v) 1))
                                                 (display " ")
-                                                (display (+ (cdr v) 1)))
+                                                (display (+ (car v) 1)))
                                                (else
                                                 (display " ")
                                                 (display (+ v 1)))))

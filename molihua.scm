@@ -402,7 +402,10 @@
                         (< (scalar-product (v- (cdr l2) ap) ad) 0))))
           (let ((s (/ (- (* b e) (* c d)) denom))
                 (t (/ (- (* a e) (* b d)) denom)))
-            (and (<= 0 s 1) (<= 0 t 1)))))))
+            (and (<= 0 s 1) (<= 0 t 1)
+                 (< (point-distance (v+ ap (v* ad s))
+                                    (v+ bp (v* bd t)))
+                    1e-5)))))))
 
 (define (closest-vertex line verts)
   (let loop ((best #f) (dist #f) (lst verts))

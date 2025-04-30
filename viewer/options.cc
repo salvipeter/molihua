@@ -62,6 +62,15 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(tanscaleBox);
   connect(tanscaleBox, &QDoubleSpinBox::valueChanged, this, &Options::tangentScaleChanged);
 
+  geometryLayout->addWidget(new QLabel("Midvector scaling:"));
+  auto mvecscaleBox = new QDoubleSpinBox();
+  mvecscaleBox->setRange(0.01, 10.0);
+  mvecscaleBox->setValue(1);
+  mvecscaleBox->setSingleStep(0.1);
+  mvecScaleChanged(mvecscaleBox->value());
+  geometryLayout->addWidget(mvecscaleBox);
+  connect(mvecscaleBox, &QDoubleSpinBox::valueChanged, this, &Options::mvecScaleChanged);
+
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);
   auto miscLayout = new QVBoxLayout();
@@ -72,6 +81,11 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
 
 void Options::fullnessChanged(double full) {
   scm_c_define("fullness", scm_from_double(full));
+  viewer->reload();
+}
+
+void Options::mvecScaleChanged(double scale) {
+  scm_c_define("midvector-scale", scm_from_double(scale));
   viewer->reload();
 }
 

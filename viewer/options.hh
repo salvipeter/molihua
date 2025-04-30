@@ -13,6 +13,7 @@ public:
 
 public slots:
   void fullnessChanged(double full);
+  void mvecScaleChanged(double scale);
   void onePatchChanged(Qt::CheckState state);
   void resolutionChanged(int res);
   void selectedChanged(int selected);

@@ -1,6 +1,7 @@
 (define filename "models/elretoltkocka.obj")
 (define fullness 0.5)
 (define tangent-scale 1)
+(define midvector-scale 1)
 (define only-one-patch #f)
 (define resolution 100)
 (define generate-model? #t)

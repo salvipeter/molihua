@@ -3,7 +3,7 @@
 #include "ph-gb.hh"
 #include "viewer.hh"
 
-Viewer::Viewer(QWidget *parent) : QGLViewer(parent) {
+Viewer::Viewer(QWidget *parent) : QGLViewer(parent), white_back(false) {
   setSelectRegionWidth(10);
   setSelectRegionHeight(10);
   axes.shown = false;
@@ -109,6 +109,12 @@ void Viewer::init() {
 }
 
 void Viewer::draw() {
+  if (white_back)
+    glClearColor(1.0, 1.0, 1.0, 1.0);
+  else
+    glClearColor(0.33, 0.33, 0.43, 1.0);
+  glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
   for (auto o : objects)
     o->draw(vis);
 
@@ -205,6 +211,10 @@ void Viewer::postSelection(const QPoint &p) {
 }
 
 void Viewer::keyPressEvent(QKeyEvent *e) {
+  if (e->key() == Qt::Key_Question) {
+    help();
+    return;
+  }
   if (e->modifiers() == Qt::NoModifier)
     switch (e->key()) {
     case Qt::Key_R:
@@ -215,6 +225,10 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
         camera()->setType(qglviewer::Camera::ORTHOGRAPHIC);
       else
         camera()->setType(qglviewer::Camera::PERSPECTIVE);
+      update();
+      break;
+    case Qt::Key_H:
+      white_back = !white_back;
       update();
       break;
     case Qt::Key_P:
@@ -249,6 +263,10 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       break;
     case Qt::Key_F:
       vis.show_chamfers = !vis.show_chamfers;
+      update();
+      break;
+    case Qt::Key_D:
+      vis.show_boundaries = !vis.show_boundaries;
       update();
       break;
     case Qt::Key_B:
@@ -348,8 +366,10 @@ QString Viewer::helpString() const {
                "<ul>"
                "<li>&nbsp;R: Reload model</li>"
                "<li>&nbsp;O: Toggle orthographic projection</li>"
+               "<li>&nbsp;H: Toggle white background</li>"
                "<li>&nbsp;P: Set plain map (no coloring)</li>"
                "<li>&nbsp;M: Set mean curvature map</li>"
+               "<li>&nbsp;G: Set Gaussian curvature map</li>"
                "<li>&nbsp;L: Set slicing map<ul>"
                "<li>&nbsp;+: Increase slicing density</li>"
                "<li>&nbsp;-: Decrease slicing density</li>"
@@ -359,24 +379,13 @@ QString Viewer::helpString() const {
                "<li>&nbsp;C: Toggle cage visualization</li>"
                "<li>&nbsp;V: Toggle offset visualization</li>"
                "<li>&nbsp;F: Toggle chamfer visualization</li>"
+               "<li>&nbsp;D: Toggle boundary visualization</li>"
                "<li>&nbsp;B: Toggle Bézier control polygon visualization</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"
                "<li>&nbsp;X/Y/Z: Set standard view direction</li>"
+               "<li>&nbsp;?: This help</li>"
                "</ul>"
-               "<p>There is also a simple selection and movement interface, enabled "
-               "only when the wireframe/controlnet is displayed: a mesh vertex can be selected "
-               "by shift-clicking, and it can be moved by shift-dragging one of the "
-               "displayed axes. Pressing ctrl enables movement in the screen plane.</p>"
-               "<p>Note that libQGLViewer is furnished with a lot of useful features, "
-               "such as storing/loading view positions, or saving screenshots. "
-               "OpenMesh also has a nice collection of tools for mesh manipulation: "
-               "decimation, subdivision, smoothing, etc. These can provide "
-               "good comparisons to the methods you implement.</p>"
-               "<p>This software can be used as a sample GUI base for handling "
-               "parametric or procedural surfaces, as well. The power of "
-               "Qt and libQGLViewer makes it easy to set up a prototype application. "
-               "Feel free to modify and explore!</p>"
                "<p align=\"right\">Peter Salvi</p>");
   return text;
 }

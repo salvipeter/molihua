@@ -68,6 +68,33 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
+  if (vis.show_boundaries) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0);
+    glColor3d(0.0, 1.0, 1.0);
+    for (size_t i = 0; i < patches.size(); ++i) {
+      if (show_only > 0 && show_only - 1 != i)
+        continue;
+      const auto &patch = patches[i];
+      for (const auto &ribbon : patch) {
+        size_t resolution = 100;
+        glBegin(GL_LINE_STRIP);
+        for (size_t i = 0; i <= resolution; ++i) {
+          double u = (double)i / resolution;
+          auto tmp = ribbon[0];
+          size_t n = tmp.size() - 1;
+          for (size_t k = 1; k <= n; ++k)
+            for (size_t i = 0; i <= n - k; ++i)
+              tmp[i] = tmp[i] * (1 - u) + tmp[i+1] * u;
+          glVertex3dv(tmp[0].data());
+        }
+        glEnd();
+      }
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
+  }
+
   if (vis.show_control_points) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);

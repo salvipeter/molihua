@@ -44,6 +44,7 @@ private:
   void setupCamera();
 
   std::vector<std::shared_ptr<Object>> objects;
+  bool white_back;
   Visualization vis;
 
   int selected_vertex;

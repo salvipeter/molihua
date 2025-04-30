@@ -6,6 +6,8 @@
 (define vertex-faces #f)
 (define ribbons #f)
 
+(define midvector-weight 1)
+
 
 ;;; R7RS compatibility
 (cond-expand
@@ -649,7 +651,7 @@
                        Sv1 (v* (v- (list-ref (cdr r2) 1) P2) 3))
                    1/8))
          (Mv0 (v* (v- Rv0 Sv0) 1/2))
-         (Mv05 (v* (v- Rv05 Sv05) 1/2))
+         (Mv05 (v* (v- Rv05 Sv05) 1/2 midvector-weight))
          (Mv1 (v* (v- Rv1 Sv1) 1/2))
          (ab0 (in-system Rv0 Mv0 Ru0))
          (ab1 (in-system Rv1 Mv1 Ru1))

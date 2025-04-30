@@ -33,13 +33,21 @@ Window::Window(QApplication *parent) :
   quitAction->setStatusTip(tr("Quit the program"));
   connect(quitAction, &QAction::triggered, this, &Window::close);
 
-  auto cutoffAction = new QAction(tr("Set &cutoff ratio"), this);
+  auto cutoffAction = new QAction(tr("Set mean &cutoff ratio"), this);
   cutoffAction->setStatusTip(tr("Set mean map cutoff ratio"));
-  connect(cutoffAction, &QAction::triggered, this, &Window::setCutoff);
+  connect(cutoffAction, &QAction::triggered, this, &Window::setMeanCutoff);
 
-  auto rangeAction = new QAction(tr("Set &range"), this);
+  auto rangeAction = new QAction(tr("Set mean &range"), this);
   rangeAction->setStatusTip(tr("Set mean map range"));
-  connect(rangeAction, &QAction::triggered, this, &Window::setRange);
+  connect(rangeAction, &QAction::triggered, this, &Window::setMeanRange);
+
+  auto gcutoffAction = new QAction(tr("Set Gaussian &cutoff ratio"), this);
+  gcutoffAction->setStatusTip(tr("Set Gaussian map cutoff ratio"));
+  connect(gcutoffAction, &QAction::triggered, this, &Window::setGaussCutoff);
+
+  auto grangeAction = new QAction(tr("Set Gaussian &range"), this);
+  grangeAction->setStatusTip(tr("Set Gaussian map range"));
+  connect(grangeAction, &QAction::triggered, this, &Window::setGaussRange);
 
   auto slicingAction = new QAction(tr("Set &slicing parameters"), this);
   slicingAction->setStatusTip(tr("Set contouring direction and scaling"));
@@ -52,6 +60,8 @@ Window::Window(QApplication *parent) :
   auto visMenu = menuBar()->addMenu(tr("&Visualization"));
   visMenu->addAction(cutoffAction);
   visMenu->addAction(rangeAction);
+  visMenu->addAction(gcutoffAction);
+  visMenu->addAction(grangeAction);
   visMenu->addAction(slicingAction);
 
   auto scroll = new QScrollArea();
@@ -81,7 +91,23 @@ void Window::open(bool clear_others) {
                          tr("Could not open file: ") + filename + ".");
 }
 
-void Window::setCutoff() {
+void Window::setMeanCutoff() {
+  setCutoff(true);
+}
+
+void Window::setMeanRange() {
+  setRange(true);
+}
+
+void Window::setGaussCutoff() {
+  setCutoff(false);
+}
+
+void Window::setGaussRange() {
+  setRange(false);
+}
+
+void Window::setCutoff(bool mean) {
   auto dlg = std::make_unique<QDialog>(this);
   auto *hb1    = new QHBoxLayout,
        *hb2    = new QHBoxLayout;
@@ -94,7 +120,7 @@ void Window::setCutoff() {
   sb->setDecimals(3);
   sb->setRange(0.001, 0.5);
   sb->setSingleStep(0.01);
-  sb->setValue(viewer->getCutoffRatio());
+  sb->setValue(mean ? viewer->getMeanCutoffRatio() : viewer->getGaussCutoffRatio());
   connect(cancel, &QPushButton::pressed, dlg.get(), &QDialog::reject);
   connect(ok,     &QPushButton::pressed, dlg.get(), &QDialog::accept);
   ok->setDefault(true);
@@ -110,12 +136,15 @@ void Window::setCutoff() {
   dlg->setLayout(vb);
 
   if(dlg->exec() == QDialog::Accepted) {
-    viewer->setCutoffRatio(sb->value());
+    if (mean)
+      viewer->setMeanCutoffRatio(sb->value());
+    else
+      viewer->setGaussCutoffRatio(sb->value());
     viewer->update();
   }
 }
 
-void Window::setRange() {
+void Window::setRange(bool mean) {
   QDialog dlg(this);
   auto *grid   = new QGridLayout;
   auto *text1  = new QLabel(tr("Min:")),
@@ -131,7 +160,13 @@ void Window::setRange() {
   sb1->setDecimals(5);                 sb2->setDecimals(5);
   sb1->setRange(-max, 0.0);            sb2->setRange(0.0, max);
   sb1->setSingleStep(0.01);            sb2->setSingleStep(0.01);
-  sb1->setValue(viewer->getMeanMin()); sb2->setValue(viewer->getMeanMax());
+  if (mean) {
+    sb1->setValue(viewer->getMeanMin());
+    sb2->setValue(viewer->getMeanMax());
+  } else {
+    sb1->setValue(viewer->getGaussMin());
+    sb2->setValue(viewer->getGaussMax());
+  }
   connect(cancel, &QPushButton::pressed, &dlg, &QDialog::reject);
   connect(ok,     &QPushButton::pressed, &dlg, &QDialog::accept);
   ok->setDefault(true);
@@ -147,8 +182,13 @@ void Window::setRange() {
   dlg.setLayout(grid);
 
   if(dlg.exec() == QDialog::Accepted) {
-    viewer->setMeanMin(sb1->value());
-    viewer->setMeanMax(sb2->value());
+    if (mean) {
+      viewer->setMeanMin(sb1->value());
+      viewer->setMeanMax(sb2->value());
+    } else {
+      viewer->setGaussMin(sb1->value());
+      viewer->setGaussMax(sb2->value());
+    }
     viewer->update();
   }
 }

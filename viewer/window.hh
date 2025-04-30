@@ -15,14 +15,19 @@ public:
 
 private slots:
   void open(bool clear_others);
-  void setCutoff();
-  void setRange();
+  void setMeanCutoff();
+  void setMeanRange();
+  void setGaussCutoff();
+  void setGaussRange();
   void setSlicing();
   void startComputation(QString message);
   void midComputation(int percent);
   void endComputation();
 
 private:
+  void setCutoff(bool mean);
+  void setRange(bool mean);
+
   QApplication *parent;
   Viewer *viewer;
   QProgressBar *progress;

@@ -15,13 +15,13 @@ Viewer::~Viewer() {
   glDeleteTextures(1, &vis.slicing_texture);
 }
 
-double Viewer::getCutoffRatio() const {
-  return vis.cutoff_ratio;
+double Viewer::getMeanCutoffRatio() const {
+  return vis.mean_cutoff_ratio;
 }
 
-void Viewer::setCutoffRatio(double ratio) {
-  vis.cutoff_ratio = ratio;
-  updateMeanMinMax();
+void Viewer::setMeanCutoffRatio(double ratio) {
+  vis.mean_cutoff_ratio = ratio;
+  updateCurvatureMinMax();
 }
 
 double Viewer::getMeanMin() const {
@@ -38,6 +38,31 @@ double Viewer::getMeanMax() const {
 
 void Viewer::setMeanMax(double max) {
   vis.mean_max = max;
+}
+
+double Viewer::getGaussCutoffRatio() const {
+  return vis.gauss_cutoff_ratio;
+}
+
+void Viewer::setGaussCutoffRatio(double ratio) {
+  vis.gauss_cutoff_ratio = ratio;
+  updateCurvatureMinMax();
+}
+
+double Viewer::getGaussMin() const {
+  return vis.gauss_min;
+}
+
+void Viewer::setGaussMin(double min) {
+  vis.gauss_min = min;
+}
+
+double Viewer::getGaussMax() const {
+  return vis.gauss_max;
+}
+
+void Viewer::setGaussMax(double max) {
+  vis.gauss_max = max;
 }
 
 const double *Viewer::getSlicingDir() const {
@@ -65,7 +90,7 @@ bool Viewer::open(std::string filename) {
   if (!surface->valid())
     return false;
   objects.push_back(surface);
-  updateMeanMinMax();
+  updateCurvatureMinMax();
   setupCamera();
   return true;
 }
@@ -239,6 +264,10 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       vis.type = VisType::MEAN;
       update();
       break;
+    case Qt::Key_G:
+      vis.type = VisType::GAUSS;
+      update();
+      break;
     case Qt::Key_L:
       vis.type = VisType::SLICING;
       update();
@@ -354,7 +383,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e) {
 
   objects[selected_object]->movement(selected_vertex, axes.position);
   objects[selected_object]->updateBaseMesh();
-  updateMeanMinMax();
+  updateCurvatureMinMax();
   update();
 }
 
@@ -390,12 +419,14 @@ QString Viewer::helpString() const {
   return text;
 }
 
-void Viewer::updateMeanMinMax() {
-  std::vector<double> mean;
+void Viewer::updateCurvatureMinMax() {
+  std::vector<double> mean, gauss;
   for (auto o : objects) {
     const auto &mesh = o->baseMesh();
-    for (auto v : mesh.vertices())
+    for (auto v : mesh.vertices()) {
       mean.push_back(mesh.data(v).mean);
+      gauss.push_back(mesh.data(v).gauss);
+    }
   }
 
   size_t n = mean.size();
@@ -403,7 +434,8 @@ void Viewer::updateMeanMinMax() {
     return;
 
   std::sort(mean.begin(), mean.end());
-  size_t k = (double)n * vis.cutoff_ratio;
+  std::sort(gauss.begin(), gauss.end());
+  size_t k = (double)n * vis.mean_cutoff_ratio;
   vis.mean_min = std::min(mean[k ? k-1 : 0], 0.0);
   vis.mean_max = std::max(mean[k ? n-k : n-1], 0.0);
 
@@ -411,6 +443,15 @@ void Viewer::updateMeanMinMax() {
   auto max = std::max(-vis.mean_min, vis.mean_max);
   vis.mean_min = -max;
   vis.mean_max = max;
+
+  k = (double)n * vis.gauss_cutoff_ratio;
+  vis.gauss_min = std::min(gauss[k ? k-1 : 0], 0.0);
+  vis.gauss_max = std::max(gauss[k ? n-k : n-1], 0.0);
+
+  // Use symmetric min/max
+  max = std::max(-vis.gauss_min, vis.gauss_max);
+  vis.gauss_min = -max;
+  vis.gauss_max = max;
 }
 
 void Viewer::setupCamera() {

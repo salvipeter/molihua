@@ -16,7 +16,7 @@
 
 #include "base-mesh.hh"
 
-enum class VisType { PLAIN, MEAN, SLICING, ISOPHOTES };
+enum class VisType { PLAIN, MEAN, GAUSS, SLICING, ISOPHOTES };
 
 struct Visualization {
   Visualization();
@@ -27,7 +27,9 @@ struct Visualization {
     show_boundaries;
 
   // Mean curvature
-  double mean_min, mean_max, cutoff_ratio;
+  double mean_min, mean_max, mean_cutoff_ratio;
+  // Gaussian curvature
+  double gauss_min, gauss_max, gauss_cutoff_ratio;
 
   // Slicing
   Vector slicing_dir;

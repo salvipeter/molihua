@@ -50,6 +50,8 @@ void Object::draw(const Visualization &vis) const {
       for (auto v : f.vertices()) {
         if (vis.type == VisType::MEAN)
           glColor3dv(vis.colorMap(vis.mean_min, vis.mean_max, mesh.data(v).mean).data());
+        else if (vis.type == VisType::GAUSS)
+          glColor3dv(vis.colorMap(vis.gauss_min, vis.gauss_max, mesh.data(v).gauss).data());
         else if (vis.type == VisType::SLICING)
           glTexCoord1d(mesh.point(v) | vis.slicing_dir * vis.slicing_scaling);
         glNormal3dv(mesh.normal(v).data());
@@ -87,18 +89,19 @@ void Object::updateBaseMesh() {
   updateBaseMesh(false, false);
 }
 
-void Object::updateBaseMesh(bool own_normal, bool own_mean) {
+void Object::updateBaseMesh(bool own_normal, bool own_curvature) {
   mesh.request_face_normals();
   mesh.request_vertex_normals();
   mesh.update_face_normals();
 
 #ifdef USE_JET_FITTING
 
-  if (own_normal && own_mean) {
+  if (own_normal && own_curvature) {
     // no need for jet fitting
     for (auto v : mesh.vertices()) {
       mesh.set_normal(v, normal(v));
       mesh.data(v).mean = meanCurvature(v);
+      mesh.data(v).gauss = gaussCurvature(v);
     }
     return;
   }
@@ -116,22 +119,26 @@ void Object::updateBaseMesh(bool own_normal, bool own_mean) {
       mesh.set_normal(v, normal(v));
     else
       mesh.set_normal(v, -jet.normal);
-    if (own_mean)
+    if (own_curvature) {
       mesh.data(v).mean = meanCurvature(v);
-    else
+      mesh.data(v).gauss = gaussCurvature(v);
+    } else {
       mesh.data(v).mean = (jet.k_min + jet.k_max) / 2;
+      mesh.data(v).gauss = jet.k_min * jet.k_max;
+    }
     if (reverse && !own_normal)
       mesh.set_normal(v, -mesh.normal(v));
-    if (reverse && !own_mean)
+    if (reverse && !own_curvature)
       mesh.data(v).mean *= -1;
   }
 
 #else // !USE_JET_FITTING
 
-  std::ignore = std::tie(own_normal, own_mean);
+  std::ignore = std::tie(own_normal, own_curvature);
   for (auto v : mesh.vertices()) {
     mesh.set_normal(v, normal(v));
     mesh.data(v).mean = meanCurvature(v);
+    mesh.data(v).gauss = gaussCurvature(v);
   }
 
 #endif // USE_JET_FITTING
@@ -171,6 +178,17 @@ double Object::meanCurvature(BaseMesh::VertexHandle vh) const {
     mean += angle * vec.norm();
   }
   return mean / (4 * vertex_area);
+}
+
+double Object::gaussCurvature(BaseMesh::VertexHandle vh) const {
+  auto v = OpenMesh::make_smart(vh, &mesh);
+
+  double vertex_area = 0, angle = 0;
+  for (auto he : v.incoming_halfedges()) {
+    vertex_area += mesh.calc_sector_area(he);
+    angle += mesh.calc_sector_angle(he);
+  }
+  return (2 * M_PI - angle) / (vertex_area / 3);
 }
 
 bool Object::valid() const {

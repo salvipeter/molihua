@@ -16,9 +16,10 @@ public:
   virtual bool reload() = 0;
   bool valid() const;
 protected:
-  void updateBaseMesh(bool own_normal, bool own_mean);
+  void updateBaseMesh(bool own_normal, bool own_curvature);
   virtual Vector normal(BaseMesh::VertexHandle vh) const;
   virtual double meanCurvature(BaseMesh::VertexHandle vh) const;
+  virtual double gaussCurvature(BaseMesh::VertexHandle vh) const;
 
   BaseMesh mesh;
   std::string filename;

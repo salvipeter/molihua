@@ -7,6 +7,7 @@ struct BaseTraits : public OpenMesh::DefaultTraits {
   using Normal = OpenMesh::Vec3d;
   VertexTraits {
     double mean;              // approximated mean curvature
+    double gauss;             // approximated Gaussian curvature
   };
   FaceTraits {
     size_t group;

@@ -10,12 +10,18 @@ public:
   explicit Viewer(QWidget *parent);
   ~Viewer();
 
-  double getCutoffRatio() const;
-  void setCutoffRatio(double ratio);
+  double getMeanCutoffRatio() const;
+  void setMeanCutoffRatio(double ratio);
   double getMeanMin() const;
   void setMeanMin(double min);
   double getMeanMax() const;
   void setMeanMax(double max);
+  double getGaussCutoffRatio() const;
+  void setGaussCutoffRatio(double ratio);
+  double getGaussMin() const;
+  void setGaussMin(double min);
+  double getGaussMax() const;
+  void setGaussMax(double max);
   const double *getSlicingDir() const;
   void setSlicingDir(double x, double y, double z);
   double getSlicingScaling() const;
@@ -40,7 +46,7 @@ protected:
   virtual QString helpString() const override;
 
 private:
-  void updateMeanMinMax();
+  void updateCurvatureMinMax();
   void setupCamera();
 
   std::vector<std::shared_ptr<Object>> objects;

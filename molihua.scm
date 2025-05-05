@@ -27,6 +27,17 @@
 
 ;;; General utilities
 
+;;; `x` is assumed to be in `lst`;
+;;; this gives the next element (first if `x` is last)
+(define (next-element lst x)
+  (let loop ((rest lst))
+    (cond ((null? (cdr rest)) (car lst))
+          ((eq? (car rest) x) (cadr rest))
+          (else (loop (cdr rest))))))
+
+(define (prev-element lst x)
+  (next-element (reverse lst) x))
+
 (define (flatten-pairs lst)
   (cond ((null? lst)
          '())
@@ -507,7 +518,12 @@
     (do ((result (make-vector (vector-length vertices) '()))
          (i 0 (+ i 1)))
         ((= i (vector-length faces))
-         (vector-map fix-order result))
+         (let loop ((j (- (vector-length result) 1)) (acc '()))
+           (if (< j 0)
+               (list->vector acc)
+               (loop (- j 1)
+                     (cons (fix-order-around j (vector-ref result j))
+                           acc)))))
       (for-each (lambda (v)
                   (vector-set! result v
                                (cons i (vector-ref result v))))
@@ -519,24 +535,26 @@
     (set! offset-faces (cdr offsets))))
 
 ;;; Moves the adjacent face to the beginning
-(define (select-adjacent face lst)
+;;; Adjacency means that there is (u v) in one, and (v u) in the other
+(define (select-adjacent v face lst)
   (let loop ((lst lst) (acc '()))
     (cond ((null? lst)
            (error "cannot find adjacent face"))
-          ((= (length (common-elements (vector-ref faces face)
-                                       (vector-ref faces (car lst))))
-              2)
+          ((let ((a (vector-ref faces face))
+                 (b (vector-ref faces (car lst))))
+             (or (= (next-element a v) (prev-element b v))
+                 (= (prev-element a v) (next-element b v))))
            (cons (car lst) (append acc (cdr lst))))
           (else
            (loop (cdr lst) (cons (car lst) acc))))))
 
 ;;; Permute the list of faces to be cyclic
-(define (fix-order faces)
+(define (fix-order-around v faces)
   (let loop ((lst faces))
     (if (null? (cdr lst))
         lst
         (cons (car lst)
-              (loop (select-adjacent (car lst) (cdr lst)))))))
+              (loop (select-adjacent v (car lst) (cdr lst)))))))
 
 ;;; Sum the cross products of each edge endpoints & normalize
 (define (face-normal points)

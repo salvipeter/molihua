@@ -432,7 +432,7 @@
 (define (out-normal line1 line2)
   (let* ((d1 (v- (cdr line1) (car line1)))
          (d2 (v- (cdr line2) (car line2))))
-    (vnormalize (cross-product d1 d2))))
+    (cross-product d1 d2)))
 
 (define (concave-corner? line1 line2 normal)
   (< (scalar-product normal (out-normal line1 line2)) 0))

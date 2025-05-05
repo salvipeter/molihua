@@ -599,7 +599,8 @@
                  ((= (car lst) i) (loop (cdr lst)))
                  (else (cons (vector-ref offset-faces (car lst))
                              (loop (cdr lst))))))))
-    (find-connection c0 c1 candidates)))
+    (or (find-connection c0 c1 candidates)
+        (error "no opposite face"))))
 
 ;;; Face i side j
 ;;; m: chamfer midpoint

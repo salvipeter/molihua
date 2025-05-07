@@ -1,3 +1,6 @@
+;;; Parameter
+(define shrink-chamfers? #f)
+
 ;;; Global variables
 (define vertices #f)
 (define faces #f)
@@ -590,6 +593,32 @@
         (reverse lst)
         lst)))
 
+(define (shrink-chamfer! v)
+  (let ((p (vector-ref vertices v)))
+    (let ((d (let loop ((lst (chamfer v)))
+               (cond ((null? lst) +inf.0)
+                     ((pair? (car lst))
+                      (let ((a (vector-ref offset-vertices (caar lst)))
+                            (b (vector-ref offset-vertices (cdar lst))))
+                        (min (point-distance a p)
+                             (point-distance b p)
+                             (loop (cdr lst)))))
+                     (else
+                      (min (point-distance (vector-ref offset-vertices (car lst)) p)
+                           (loop (cdr lst))))))))
+      (let* ((pull-back (lambda (q)
+                          (v+ p (v* (vnormalize (v- q p)) d))))
+             (pull-back! (lambda (i)
+                           (vector-set! offset-vertices i
+                                        (pull-back (vector-ref offset-vertices i))))))
+        (for-each (lambda (i)
+                    (cond ((pair? i)
+                           (pull-back! (car i))
+                           (pull-back! (cdr i)))
+                          (else
+                           (pull-back! i))))
+                  (chamfer v))))))
+
 ;;; At vertex j with chamfer c0, find the face connecting to chamfer c1,
 ;;; which is the opposite of face i (i.e., not face i).
 (define (find-opposite i j c0 c1)
@@ -736,4 +765,6 @@
     (set! faces (cdr model)))
   (update-topology)
   (update-offsets)
+  (when shrink-chamfers?
+    (for-each shrink-chamfer! (range 0 (vector-length vertices))))
   (update-ribbons))

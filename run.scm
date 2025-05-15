@@ -1,4 +1,4 @@
-(define filename "models/elretoltkocka.obj")
+(define filename "models/cube.obj")
 (define fullness 0.5)
 (define tangent-scale 1)
 (define midvector-scale 1)

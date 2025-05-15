@@ -197,10 +197,11 @@ void PHGB::updateBaseMesh() {
     std::vector<std::vector<libcdgbs::SurfGBS::Ribbon>> ribbons(1);
     for (const auto &r : patch) {
       Geometry::PointVector cpts;
-      for (size_t j = 0; j < r[0].size(); ++j)
+      auto deg = r[0].size() - 1;
+      for (size_t j = 0; j <= deg; ++j)
         for (size_t i = 0; i < 2; ++i)
           cpts.push_back(Geometry::Point3D(r[i][j].data()));
-      ribbons[0].emplace_back(3, 1, cpts);
+      ribbons[0].emplace_back(deg, 1, cpts);
     }
     surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh);
     mergeMeshes(mesh, patch_mesh, ++id);
@@ -279,11 +280,14 @@ bool PHGB::reload() {
         SCM ribbon = scm_list_ref(lst, scm_from_uint(j));
         std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
         for (size_t k = 0; k < 2; ++k) {
-          patches[i][j][k].resize(4);
-          for (size_t l = 0; l <= 3; ++l) {
-            SCM point = scm_list_ref(curves[k], scm_from_uint(l));
+          patches[i][j][k].clear();
+          while (scm_null_p(curves[k]) == SCM_BOOL_F) {
+            SCM point = scm_car(curves[k]);
+            Vector p;
             for (size_t c = 0; c < 3; ++c)
-              patches[i][j][k][l][c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+              p[c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+            patches[i][j][k].push_back(p);
+            curves[k] = scm_cdr(curves[k]);
           }
         }
       }

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<!DOCTYPE html>
+<html lang="">
+ <head>
+  <title>blend</title>
+  <meta name="generator" content="wxMaxima"/>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    displayAlign: "left",
+    context: "MathJax",
+    TeX: {TagSide: "left"}
+  })
+</script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  // A comment that hinders wxWidgets from optimizing this tag too much.
+</script>
+<style>
+  
+/* ************************************************************************** 
+   *        Created with wxMaxima version 22.09.0-DevelopmentSnapshot       * 
+   ************************************************************************** */
+body {
+  background-color: rgb(255,255,255);
+}
+.input {
+  color: 
+rgb(0,0,255);
+}
+.comment {
+  color: rgb(0,0,0);
+  background-color: rgb(255,255,255);
+  padding: 2mm;
+}
+.code_variable {
+  color: 
+rgb(0,128,0);
+}
+p {
+  margin-top: 0em;
+  margin-bottom: 0em;
+}
+.code_function {
+
+  color: rgb(128,0,0);
+}
+.code_comment {
+  color: rgb(64,64,64);
+}
+.code_number {
+  color: rgb(128,64,0);
+}
+.code_string {
+  color: rgb(0,0,128);
+}
+.code_operator {
+  color: rgb(0,0,0);
+}
+.code_lisp {
+  color: rgb(255,0,128);
+}
+.code_endofline {
+  color: rgb(192,192,192);}
+img {
+  -ms-interpolation-mode: bicubic;
+}
+.image {
+  color: rgb(0,0,0);
+  padding: 2mm;
+}
+.section {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  font-style: italic;
+  font-size: 1.5em;
+  padding: 2mm;
+}
+.subsect {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 2mm;
+}
+.subsubsect {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 2mm;
+}
+.heading5 {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 2mm;
+}
+.heading6 {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  font-size: 1.2em;
+  padding: 2mm;
+}
+.title {
+  color: rgb(0,0,0);
+  font-weight: bold;
+  text-decoration: underline;
+  font-size: 2em;
+  padding: 2mm;
+}
+.prompt {
+  color: rgb(255,128,128);
+}
+table {
+  border: 0px;
+}
+td {
+  vertical-align: top;
+  padding: 1mm;
+}
+</style>
+ </head>
+ <body>
+
+<!-- ************************************************************************** -->
+<!-- *        Created with wxMaxima version 22.09.0-DevelopmentSnapshot       * -->
+<!-- ************************************************************************** -->
+<noscript><div class="error message"><p>Please enable JavaScript in order to get a 2d display of the equations embedded in this web page.</p></div></noscript><p hidden = "hidden">\(      \DeclareMathOperator{\abs}{abs}
+      \newcommand{\ensuremath}[1]{\mbox{$#1$}}
+\)</p>
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i1)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">R</span><span class="code_operator">:</span> <span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">2</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">3</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">v</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">2</span><span class="code_endofline">,</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">3</span><span class="code_endofline">,</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i2)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rs</span><span class="code_operator">:</span> <span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">2</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">3</span><span class="code_endofline">,</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">v</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">3</span><span class="code_endofline">,</span><span class="code_operator">−</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">2</span><span class="code_endofline">,</span><span class="code_operator">−</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_operator">−</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">P</span><span class="code_operator">[</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_operator">−</span><span class="code_number">1</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i3)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Ru</span><span class="code_operator">:</span> <span class="code_function">diff</span><span class="code_operator">(</span><span class="code_variable">R</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i4)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rv</span><span class="code_operator">:</span> <span class="code_function">diff</span><span class="code_operator">(</span><span class="code_variable">R</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i5)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rsv</span><span class="code_operator">:</span> <span class="code_function">diff</span><span class="code_operator">(</span><span class="code_variable">Rs</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i6)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rbv</span><span class="code_operator">:</span> <span class="code_operator">(</span><span class="code_variable">Rv</span><span class="code_operator">−</span><span class="code_variable">Rsv</span><span class="code_operator">)</span><span class="code_operator">/</span><span class="code_number">2</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i7)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Ruv</span><span class="code_operator">:</span> <span class="code_function">diff</span><span class="code_operator">(</span><span class="code_variable">Rv</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i8)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">T0</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Ruv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}9 {P_{1,1}}-9 {P_{1,0}}-9 {P_{0,1}}+9 {P_{0,0}}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i9)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">T1</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Ruv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}9 {P_{3,1}}-9 {P_{3,0}}-9 {P_{2,1}}+9 {P_{2,0}}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i28)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rbv0</span><span class="code_operator">:</span> <span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Rbv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 {P_{0,1}}-3 {P_{3,-1}}}{2}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i29)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rbv05</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Rbv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">1</span><span class="code_operator">/</span><span class="code_number">2</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 {P_{3,1}}}{16}-\frac{3 {P_{3,-1}}}{16}+\frac{9 {P_{2,1}}}{16}-\frac{9 {P_{2,-1}}}{16}+\frac{9 {P_{1,1}}}{16}-\frac{9 {P_{1,-1}}}{16}+\frac{3 {P_{0,1}}}{16}-\frac{3 {P_{0,-1}}}{16}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i30)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rbv1</span><span class="code_operator">:</span> <span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Rbv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 {P_{3,1}}-3 {P_{0,-1}}}{2}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i10)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">D</span><span class="code_operator">:</span> <span class="code_function">xthru</span><span class="code_operator">(</span><span class="code_function">expand</span><span class="code_operator">(</span><span class="code_operator">(</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">−</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">+</span><span class="code_number">1</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">Rbv0</span><span class="code_operator">+</span><span class="code_number">4</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">Rbv05</span><span class="code_operator">+</span><span class="code_operator">(</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">Rbv1</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i11)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">a</span><span class="code_operator">:</span> <span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">a0</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">as0</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">as1</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">a1</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i12)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">b</span><span class="code_operator">:</span> <span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">b0</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">·</span><span class="code_variable">bs0</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_number">1</span><span class="code_operator">−</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">bs1</span><span class="code_operator">+</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">b1</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i13)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">Rhv</span><span class="code_operator">:</span> <span class="code_variable">Ru</span><span class="code_operator">·</span><span class="code_variable">a</span><span class="code_operator">+</span><span class="code_variable">D</span><span class="code_operator">·</span><span class="code_variable">b</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i14)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">dRhv</span><span class="code_operator">:</span> <span class="code_function">diff</span><span class="code_operator">(</span><span class="code_variable">Rhv</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i31)	
+  </span></td>
+  <td><span class="input">
+<span class="code_function">expand</span><span class="code_operator">(</span><span class="code_number">4</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">dRhv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">−</span><span class="code_variable">T0</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}-18 {P_{3,-1}} \ensuremath{\mathrm{bs0}}+18 {P_{0,1}} \ensuremath{\mathrm{bs0}}-3 {P_{3,1}} \ensuremath{\mathrm{b0}}+33 {P_{3,-1}} \ensuremath{\mathrm{b0}}+9 {P_{2,1}} \ensuremath{\mathrm{b0}}-9 {P_{2,-1}} \ensuremath{\mathrm{b0}}+9 {P_{1,1}} \ensuremath{\mathrm{b0}}-9 {P_{1,-1}} \ensuremath{\mathrm{b0}}-33 {P_{0,1}} \ensuremath{\mathrm{b0}}+3 {P_{0,-1}} \ensuremath{\mathrm{b0}}+36 {P_{1,0}} \ensuremath{\mathrm{as0}}-36 {P_{0,0}} \ensuremath{\mathrm{as0}}+24 {P_{2,0}} \ensuremath{\mathrm{a0}}-84 {P_{1,0}} \ensuremath{\mathrm{a0}}+60 {P_{0,0}} \ensuremath{\mathrm{a0}}-36 {P_{1,1}}+36 {P_{1,0}}+36 {P_{0,1}}-36 {P_{0,0}}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i32)	
+  </span></td>
+  <td><span class="input">
+<span class="code_function">expand</span><span class="code_operator">(</span><span class="code_number">4</span><span class="code_operator">·</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">dRhv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">u</span><span class="code_operator">=</span><span class="code_number">1</span><span class="code_endofline">,</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">−</span><span class="code_variable">T1</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}-18 {P_{3,1}} \ensuremath{\mathrm{bs1}}+18 {P_{0,-1}} \ensuremath{\mathrm{bs1}}+33 {P_{3,1}} \ensuremath{\mathrm{b1}}-3 {P_{3,-1}} \ensuremath{\mathrm{b1}}-9 {P_{2,1}} \ensuremath{\mathrm{b1}}+9 {P_{2,-1}} \ensuremath{\mathrm{b1}}-9 {P_{1,1}} \ensuremath{\mathrm{b1}}+9 {P_{1,-1}} \ensuremath{\mathrm{b1}}+3 {P_{0,1}} \ensuremath{\mathrm{b1}}-33 {P_{0,-1}} \ensuremath{\mathrm{b1}}-36 {P_{3,0}} \ensuremath{\mathrm{as1}}+36 {P_{2,0}} \ensuremath{\mathrm{as1}}+60 {P_{3,0}} \ensuremath{\mathrm{a1}}-84 {P_{2,0}} \ensuremath{\mathrm{a1}}+24 {P_{1,0}} \ensuremath{\mathrm{a1}}-36 {P_{3,1}}+36 {P_{3,0}}+36 {P_{2,1}}-36 {P_{2,0}}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i15)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_function">ev</span><span class="code_operator">(</span><span class="code_variable">Rhv</span><span class="code_endofline">,</span><span class="code_operator">[</span><span class="code_variable">v</span><span class="code_operator">=</span><span class="code_number">0</span><span class="code_operator">]</span><span class="code_operator">)</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i16)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co1</span><span class="code_operator">:</span> <span class="code_function">coeff</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i17)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co2</span><span class="code_operator">:</span> <span class="code_function">coeff</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i18)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co3</span><span class="code_operator">:</span> <span class="code_function">coeff</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i19)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co4</span><span class="code_operator">:</span> <span class="code_function">coeff</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">4</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i20)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co5</span><span class="code_operator">:</span> <span class="code_function">coeff</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_endofline">,</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">5</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i21)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">co0</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">q</span><span class="code_operator">−</span><span class="code_variable">co1</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">−</span><span class="code_variable">co2</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">2</span><span class="code_operator">−</span><span class="code_variable">co3</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">3</span><span class="code_operator">−</span><span class="code_variable">co4</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">4</span><span class="code_operator">−</span><span class="code_variable">co5</span><span class="code_operator">·</span><span class="code_variable">u</span><span class="code_operator">^</span><span class="code_number">5</span><span class="code_operator">)</span><span class="code_endofline">$</span>  </span></td>
+</tr></table>
+
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i22)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q0</span><span class="code_operator">:</span> <span class="code_variable">co0</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{b0}}+3 {P_{1,0}} \ensuremath{\mathrm{a0}}-3 {P_{0,0}} \ensuremath{\mathrm{a0}}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i23)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q1</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">co0</span><span class="code_operator">+</span><span class="code_variable">co1</span><span class="code_operator">/</span><span class="code_number">5</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 \ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{bs0}}}{5}-\frac{\ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{b0}}}{5}+\frac{4 \ensuremath{\mathrm{Rbv05}}\, \ensuremath{\mathrm{b0}}}{5}-\frac{\ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{b0}}}{5}+\frac{9 {P_{1,0}} \ensuremath{\mathrm{as0}}}{5}-\frac{9 {P_{0,0}} \ensuremath{\mathrm{as0}}}{5}+\frac{6 {P_{2,0}} \ensuremath{\mathrm{a0}}}{5}-\frac{6 {P_{1,0}} \ensuremath{\mathrm{a0}}}{5}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i24)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q2</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">co0</span><span class="code_operator">+</span><span class="code_number">2</span><span class="code_operator">·</span><span class="code_variable">co1</span><span class="code_operator">/</span><span class="code_number">5</span><span class="code_operator">+</span><span class="code_variable">co2</span><span class="code_operator">/</span><span class="code_number">10</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 \ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{bs1}}}{10}-\frac{3 \ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{bs0}}}{10}+\frac{6 \ensuremath{\mathrm{Rbv05}}\, \ensuremath{\mathrm{bs0}}}{5}-\frac{3 \ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{bs0}}}{10}+\frac{\ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{b0}}}{10}+\frac{9 {P_{1,0}} \ensuremath{\mathrm{as1}}}{10}-\frac{9 {P_{0,0}} \ensuremath{\mathrm{as1}}}{10}+\frac{9 {P_{2,0}} \ensuremath{\mathrm{as0}}}{5}-\frac{9 {P_{1,0}} \ensuremath{\mathrm{as0}}}{5}+\frac{3 {P_{3,0}} \ensuremath{\mathrm{a0}}}{10}-\frac{3 {P_{2,0}} \ensuremath{\mathrm{a0}}}{10}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i25)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q3</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">co0</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">co1</span><span class="code_operator">/</span><span class="code_number">5</span><span class="code_operator">+</span><span class="code_number">3</span><span class="code_operator">·</span><span class="code_variable">co2</span><span class="code_operator">/</span><span class="code_number">10</span><span class="code_operator">+</span><span class="code_variable">co3</span><span class="code_operator">/</span><span class="code_number">10</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}-\frac{3 \ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{bs1}}}{10}+\frac{6 \ensuremath{\mathrm{Rbv05}}\, \ensuremath{\mathrm{bs1}}}{5}-\frac{3 \ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{bs1}}}{10}+\frac{3 \ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{bs0}}}{10}+\frac{\ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{b1}}}{10}+\frac{9 {P_{2,0}} \ensuremath{\mathrm{as1}}}{5}-\frac{9 {P_{1,0}} \ensuremath{\mathrm{as1}}}{5}+\frac{9 {P_{3,0}} \ensuremath{\mathrm{as0}}}{10}-\frac{9 {P_{2,0}} \ensuremath{\mathrm{as0}}}{10}+\frac{3 {P_{1,0}} \ensuremath{\mathrm{a1}}}{10}-\frac{3 {P_{0,0}} \ensuremath{\mathrm{a1}}}{10}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i26)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q4</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">co0</span><span class="code_operator">+</span><span class="code_number">4</span><span class="code_operator">·</span><span class="code_variable">co1</span><span class="code_operator">/</span><span class="code_number">5</span><span class="code_operator">+</span><span class="code_number">6</span><span class="code_operator">·</span><span class="code_variable">co2</span><span class="code_operator">/</span><span class="code_number">10</span><span class="code_operator">+</span><span class="code_number">4</span><span class="code_operator">·</span><span class="code_variable">co3</span><span class="code_operator">/</span><span class="code_number">10</span><span class="code_operator">+</span><span class="code_variable">co4</span><span class="code_operator">/</span><span class="code_number">5</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\frac{3 \ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{bs1}}}{5}-\frac{\ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{b1}}}{5}+\frac{4 \ensuremath{\mathrm{Rbv05}}\, \ensuremath{\mathrm{b1}}}{5}-\frac{\ensuremath{\mathrm{Rbv0}}\, \ensuremath{\mathrm{b1}}}{5}+\frac{9 {P_{3,0}} \ensuremath{\mathrm{as1}}}{5}-\frac{9 {P_{2,0}} \ensuremath{\mathrm{as1}}}{5}+\frac{6 {P_{2,0}} \ensuremath{\mathrm{a1}}}{5}-\frac{6 {P_{1,0}} \ensuremath{\mathrm{a1}}}{5}\]
+</p>
+
+
+<!-- Code cell -->
+
+
+<table><tr><td>
+  <span class="prompt">
+(%i27)	
+  </span></td>
+  <td><span class="input">
+<span class="code_variable">q5</span><span class="code_operator">:</span> <span class="code_function">expand</span><span class="code_operator">(</span><span class="code_variable">co0</span><span class="code_operator">+</span><span class="code_variable">co1</span><span class="code_operator">+</span><span class="code_variable">co2</span><span class="code_operator">+</span><span class="code_variable">co3</span><span class="code_operator">+</span><span class="code_variable">co4</span><span class="code_operator">+</span><span class="code_variable">co5</span><span class="code_operator">)</span><span class="code_endofline">;</span>  </span></td>
+</tr></table>
+<p>
+\[\operatorname{	}\ensuremath{\mathrm{Rbv1}}\, \ensuremath{\mathrm{b1}}+3 {P_{3,0}} \ensuremath{\mathrm{a1}}-3 {P_{2,0}} \ensuremath{\mathrm{a1}}\]
+</p>
+
+ <hr/>
+ <p><small> Created with <a href="https://wxMaxima-developers.github.io/wxmaxima/">wxMaxima</a>.</small></p>
+ </body>
+</html>

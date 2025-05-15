@@ -1,0 +1,165 @@
+/* [wxMaxima batch file version 1] [ DO NOT EDIT BY HAND! ]*/
+/* [ Created with wxMaxima version 22.09.0-DevelopmentSnapshot ] */
+/* [wxMaxima: input   start ] */
+R: (1-v)^3*((1-u)^3*P[0,0]+3*(1-u)^2*u*P[1,0]+3*(1-u)*u^2*P[2,0]+u^3*P[3,0])+3*(1-v)^2*v*((1-u)^3*P[0,1]+3*(1-u)^2*u*P[1,1]+3*(1-u)*u^2*P[2,1]+u^3*P[3,1])$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rs: (1-v)^3*((1-u)^3*P[0,0]+3*(1-u)^2*u*P[1,0]+3*(1-u)*u^2*P[2,0]+u^3*P[3,0])+3*(1-v)^2*v*((1-u)^3*P[3,-1]+3*(1-u)^2*u*P[2,-1]+3*(1-u)*u^2*P[1,-1]+u^3*P[0,-1])$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Ru: diff(R,u)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rv: diff(R,v)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rsv: diff(Rs,v)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rbv: (Rv-Rsv)/2$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Ruv: diff(Rv,u)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+T0: expand(ev(Ruv,[u=0,v=0]));
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+T1: expand(ev(Ruv,[u=1,v=0]));
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rbv0: ev(Rbv,[u=0,v=0]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rbv05: expand(ev(Rbv,[u=1/2,v=0]));
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rbv1: ev(Rbv,[u=1,v=0]);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+D: xthru(expand((2*u^2-3*u+1)*Rbv0+4*u*(1-u)*Rbv05+(2*u^2-u)*Rbv1))$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+a: (1-u)^3*a0+3*(1-u)^2*u*as0+3*(1-u)*u^2*as1+u^3*a1$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+b: (1-u)^3*b0+3*(1-u)^2*u*bs0+3*(1-u)*u^2*bs1+u^3*b1$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+Rhv: Ru*a+D*b$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+dRhv: diff(Rhv,u)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+expand(4*(ev(dRhv,[u=0,v=0])-T0));
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+expand(4*(ev(dRhv,[u=1,v=0])-T1));
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q: expand(ev(Rhv,[v=0]))$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co1: coeff(q,u)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co2: coeff(q,u^2)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co3: coeff(q,u^3)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co4: coeff(q,u^4)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co5: coeff(q,u^5)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+co0: expand(q-co1*u-co2*u^2-co3*u^3-co4*u^4-co5*u^5)$
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q0: co0;
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q1: expand(co0+co1/5);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q2: expand(co0+2*co1/5+co2/10);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q3: expand(co0+3*co1/5+3*co2/10+co3/10);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q4: expand(co0+4*co1/5+6*co2/10+4*co3/10+co4/5);
+/* [wxMaxima: input   end   ] */
+
+
+/* [wxMaxima: input   start ] */
+q5: expand(co0+co1+co2+co3+co4+co5);
+/* [wxMaxima: input   end   ] */
+
+
+
+/* Old versions of Maxima abort on loading files that end in a comment. */
+"Created with wxMaxima 22.09.0-DevelopmentSnapshot"$

@@ -1,0 +1,2 @@
+/* Bernstein-coefficients experssed by power-basis coefficients for degree n */
+pow2ber(n):=apply('matrix,makelist(makelist(binomial(i,j)/binomial(n,j),j,0,n),i,0,n)).makelist(c[i],i,0,n)$

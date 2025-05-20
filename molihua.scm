@@ -1,6 +1,8 @@
 ;;; Parameters
 (define shrink-chamfers? #f)
-(define quintic-direction-blend? #t)
+; Possible values: cubic, cubic-simple, cubic-no-alpha, quintic, quintic-tomi
+(define direction-blend-type 'quintic-tomi)
+(define quintic-with-cubic-cross-degree? #t)
 
 ;;; Global variables
 (define vertices #f)
@@ -668,10 +670,18 @@
          (Mv1 (v* (v- Rv1 Sv1) 1/2))
          (ab0 (in-system Rv0 Mv0 Ru0))
          (ab1 (in-system Rv1 Mv1 Ru1))
-         (a0 (car ab0))
-         (a1 (car ab1))
-         (b0 (cdr ab0))
-         (b1 (cdr ab1))
+         (a0 (case direction-blend-type
+               ((cubic-simple cubic-no-alpha) 1)
+               (else (car ab0))))
+         (a1 (case direction-blend-type
+               ((cubic-simple cubic-no-alpha) 1)
+               (else (car ab1))))
+         (b0 (case direction-blend-type
+               ((cubic-simple) 0)
+               (else (cdr ab0))))
+         (b1 (case direction-blend-type
+               ((cubic-simple) 0)
+               (else (cdr ab1))))
          (Q0 (v+ (v* Mv0 a0) (v* Ru0 b0)))
          (Q1 (v+ (v* Mv0 1/3 (- a1 a0)) (v* Mv05 4/3 a0) (v* Mv1 -1/3 a0)
                  (v* Ru0 1/3 b1) (v* (v- P2 P1) 2 b0)))
@@ -749,8 +759,9 @@
                (Q5 (v+ (v* Rbv1 (cdr ab1)) (v* (v- P30 P20) 3 (car ab1))))
                (quintic (elevate (elevate (car r1)))))
           (cons quintic
-                (map (lambda (p q) (v+ p (v* q 1/3)))
-                     quintic (list Q0 Q1 Q2 Q3 Q4 Q5))))))))
+                (let ((scale/d (if quintic-with-cubic-cross-degree? 1/3 1/5)))
+                  (map (lambda (p q) (v+ p (v* q scale/d)))
+                       quintic (list Q0 Q1 Q2 Q3 Q4 Q5)))))))))
 
 (define (direction-blend-quintic-tomi r1 r2)
   (bind-list (P00 P10 P20 P30) (car r1)
@@ -790,8 +801,9 @@
                (c5 (v+ (v* a2 (car ab3)) (v* b2 (cdr ab3))))
                (quintic (elevate (elevate (car r1)))))
           (cons quintic
-                (map (lambda (p q) (v+ p (v* q 1/3)))
-                     quintic (list c0 c1 c2 c3 c4 c5))))))))
+                (let ((scale/d (if quintic-with-cubic-cross-degree? 1/3 1/5)))
+                  (map (lambda (p q) (v+ p (v* q scale/d)))
+                       quintic (list c0 c1 c2 c3 c4 c5)))))))))
 
 ;;; Returns (face . side)
 (define (opposite-side i j)
@@ -819,9 +831,10 @@
                             (let* ((opp (opposite-side i j))
                                    (opp-face (vector-ref ribbons (car opp)))
                                    (opp-ribbon (list-ref opp-face (cdr opp))))
-                              (if quintic-direction-blend?
-                                  (direction-blend-quintic ribbon opp-ribbon)
-                                  (direction-blend ribbon opp-ribbon))))
+                              (case direction-blend-type
+                                ((quintic) (direction-blend-quintic ribbon opp-ribbon))
+                                ((quintic-tomi) (direction-blend-quintic-tomi ribbon opp-ribbon))
+                                (else (direction-blend ribbon opp-ribbon)))))
                           face-ribbons (range 0 (length face-ribbons))))))))
 
 (define (update-ribbons)

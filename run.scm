@@ -1,7 +1,17 @@
 (define filename "models/cube.obj")
+
+;;; Shape parameters
 (define fullness 0.5)
+(define shrink-chamfers? #f)
 (define tangent-scale 1)
 (define midvector-scale 1)
+
+;;; Direction blend options
+; Possible values: cubic, cubic-simple, cubic-no-alpha, quintic, quintic-tomi
+(define direction-blend-type 'cubic)
+(define quintic-with-cubic-cross-degree? #t)
+
+;;; Output
 (define only-one-patch #f)
 (define resolution 100)
 (define generate-model? #t)

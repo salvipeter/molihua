@@ -1,6 +1,7 @@
 #include <libguile.h>
 
 #include <QCheckBox>
+#include <QComboBox>
 #include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QLabel>
@@ -36,7 +37,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   selectedBox->setValue(1);
   selectedBox->setEnabled(false);
   visualLayout->addWidget(selectedBox);
-  onePatchChanged(Qt::Unchecked);
+  onePatchChanged(oneCheck->checkState());
   connect(selectedBox, &QSpinBox::valueChanged, this, &Options::selectedChanged);
 
   auto geometry = new QGroupBox("Geometry");
@@ -52,6 +53,11 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   fullnessChanged(fullBox->value());
   geometryLayout->addWidget(fullBox);
   connect(fullBox, &QDoubleSpinBox::valueChanged, this, &Options::fullnessChanged);
+
+  auto shrinkCheck = new QCheckBox("Shrink chamfers");
+  geometryLayout->addWidget(shrinkCheck);
+  connect(shrinkCheck, &QCheckBox::checkStateChanged, this, &Options::shrinkChanged);
+  shrinkChanged(shrinkCheck->checkState());
 
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
@@ -70,6 +76,23 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   mvecScaleChanged(mvecscaleBox->value());
   geometryLayout->addWidget(mvecscaleBox);
   connect(mvecscaleBox, &QDoubleSpinBox::valueChanged, this, &Options::mvecScaleChanged);
+
+  geometryLayout->addWidget(new QLabel("Direction blend type:"));
+  auto dblendCombo = new QComboBox();
+  dblendCombo->addItem("Cubic");
+  dblendCombo->addItem("Cubic - simple");
+  dblendCombo->addItem("Cubic - no alpha");
+  dblendCombo->addItem("Quintic");
+  dblendCombo->addItem("Quintic - Tomi");
+  geometryLayout->addWidget(dblendCombo);
+  connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
+  dblendChanged(dblendCombo->currentIndex());
+
+  auto quinticCubicCheck = new QCheckBox("Quintic w/cubic cross-degree");
+  quinticCubicCheck->setChecked(true);
+  geometryLayout->addWidget(quinticCubicCheck);
+  connect(quinticCubicCheck, &QCheckBox::checkStateChanged, this, &Options::quinticCubicChanged);
+  quinticCubicChanged(quinticCubicCheck->checkState());
 
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);
@@ -111,7 +134,25 @@ void Options::selectedChanged(int selected) {
   viewer->update();
 }
 
+void Options::shrinkChanged(Qt::CheckState state) {
+  scm_c_define("shrink-chamfers?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  viewer->reload();
+}
+
 void Options::tangentScaleChanged(double scale) {
   scm_c_define("tangent-scale", scm_from_double(scale));
+  viewer->reload();
+}
+
+void Options::dblendChanged(int index) {
+  std::array<std::string, 5> types = {
+    "cubic", "cubic-simple", "cubic-no-alpha", "quintic", "quintic-tomi"
+  };
+  scm_c_define("direction-blend-type", scm_from_utf8_symbol(types[index].c_str()));
+  viewer->reload();
+}
+
+void Options::quinticCubicChanged(Qt::CheckState state) {
+  scm_c_define("quintic-with-cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
   viewer->reload();
 }

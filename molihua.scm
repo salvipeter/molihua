@@ -1,9 +1,6 @@
-;;; Parameters
-(define shrink-chamfers? #f)
-; Possible values: cubic, cubic-simple, cubic-no-alpha, quintic, quintic-tomi
-(define direction-blend-type 'quintic-tomi)
-(define quintic-with-cubic-cross-degree? #t)
+;;; Parameters (for debugging/experiments etc.)
 
+
 ;;; Global variables
 (define vertices #f)
 (define faces #f)

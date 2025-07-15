@@ -62,7 +62,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
   tanscaleBox->setRange(0.01, 10.0);
-  tanscaleBox->setValue(1.3);
+  tanscaleBox->setValue(1.33);
   tanscaleBox->setSingleStep(0.1);
   tangentScaleChanged(tanscaleBox->value());
   geometryLayout->addWidget(tanscaleBox);
@@ -82,13 +82,17 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   dblendCombo->addItem("Cubic");
   dblendCombo->addItem("Cubic - simple");
   dblendCombo->addItem("Cubic - no alpha");
+  dblendCombo->addItem("Quartic - simple");
+  dblendCombo->addItem("Quartic - no alpha");
+  dblendCombo->addItem("QuarticTomi - simple");
+  dblendCombo->addItem("QuarticTomi - no alpha");
   dblendCombo->addItem("Quintic");
-  dblendCombo->addItem("Quintic - Tomi");
+  dblendCombo->addItem("QuinticTomi");
   geometryLayout->addWidget(dblendCombo);
   connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
   dblendChanged(dblendCombo->currentIndex());
 
-  auto quinticCubicCheck = new QCheckBox("Quintic w/cubic cross-degree");
+  auto quinticCubicCheck = new QCheckBox("Cubic cross-degree");
   quinticCubicCheck->setChecked(true);
   geometryLayout->addWidget(quinticCubicCheck);
   connect(quinticCubicCheck, &QCheckBox::checkStateChanged, this, &Options::quinticCubicChanged);
@@ -145,14 +149,16 @@ void Options::tangentScaleChanged(double scale) {
 }
 
 void Options::dblendChanged(int index) {
-  std::array<std::string, 5> types = {
-    "cubic", "cubic-simple", "cubic-no-alpha", "quintic", "quintic-tomi"
+  std::array<std::string, 9> types = {
+    "cubic", "cubic-simple", "cubic-no-alpha",
+    "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple", "quartic-tomi-no-alpha",
+    "quintic", "quintic-tomi"
   };
   scm_c_define("direction-blend-type", scm_from_utf8_symbol(types[index].c_str()));
   viewer->reload();
 }
 
 void Options::quinticCubicChanged(Qt::CheckState state) {
-  scm_c_define("quintic-with-cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  scm_c_define("cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
   viewer->reload();
 }

@@ -79,6 +79,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
 
   geometryLayout->addWidget(new QLabel("Direction blend type:"));
   auto dblendCombo = new QComboBox();
+  dblendCombo->addItem("None");
   dblendCombo->addItem("Cubic");
   dblendCombo->addItem("Cubic - simple");
   dblendCombo->addItem("Cubic - no alpha");
@@ -88,6 +89,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   dblendCombo->addItem("QuarticTomi - no alpha");
   dblendCombo->addItem("Quintic");
   dblendCombo->addItem("QuinticTomi");
+  dblendCombo->setCurrentIndex(1);
   geometryLayout->addWidget(dblendCombo);
   connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
   dblendChanged(dblendCombo->currentIndex());
@@ -149,8 +151,8 @@ void Options::tangentScaleChanged(double scale) {
 }
 
 void Options::dblendChanged(int index) {
-  std::array<std::string, 9> types = {
-    "cubic", "cubic-simple", "cubic-no-alpha",
+  std::array<std::string, 10> types = {
+    "none", "cubic", "cubic-simple", "cubic-no-alpha",
     "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple", "quartic-tomi-no-alpha",
     "quintic", "quintic-tomi"
   };

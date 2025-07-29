@@ -903,7 +903,8 @@
                                   direction-blend-quartic-tomi)
                                  ((quintic) direction-blend-quintic)
                                  ((quintic-tomi) direction-blend-quintic-tomi)
-                                 (else direction-blend ))
+                                 ((none) (lambda (x y) x))
+                                 (else direction-blend))
                                ribbon opp-ribbon)))
                           face-ribbons (range 0 (length face-ribbons))))))))
 

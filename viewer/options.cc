@@ -3,8 +3,10 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
+#include <QFileDialog>
 #include <QGroupBox>
 #include <QLabel>
+#include <QPushButton>
 #include <QSpinBox>
 #include <QVBoxLayout>
 
@@ -105,6 +107,10 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   auto miscLayout = new QVBoxLayout();
   misc->setLayout(miscLayout);
 
+  auto exportButton = new QPushButton("Export selected patch");
+  connect(exportButton, &QPushButton::clicked, this, &Options::exportClicked);
+  miscLayout->addWidget(exportButton);
+
   setLayout(master);
 }
 
@@ -163,4 +169,24 @@ void Options::dblendChanged(int index) {
 void Options::quinticCubicChanged(Qt::CheckState state) {
   scm_c_define("cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
   viewer->reload();
+}
+
+void Options::exportClicked() {
+  // Check if selection is valid
+  size_t selected = selectedBox->value() - 1;
+  SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
+  size_t n_ribbons = scm_to_uint(scm_vector_length(ribbons));
+  if (selected >= n_ribbons)
+    return;
+
+  // Get a file name
+  auto name = QFileDialog::getSaveFileName(this, "Export Patch", ".", "GBS patches (*.mgbs)");
+  if (name.isEmpty())
+    return;
+  if (!name.endsWith(".mgbs"))
+    name += ".mgbs";
+
+  // Export
+  scm_c_eval_string(("(write-patch-mgbs (vector-ref ribbons %1) \"" + name + "\")")
+                    .arg(selected).toUtf8().data());
 }

@@ -21,6 +21,7 @@ public slots:
   void tangentScaleChanged(double scale);
   void dblendChanged(int index);
   void quinticCubicChanged(Qt::CheckState state);
+  void exportClicked();
 
 private:
   Viewer *viewer;

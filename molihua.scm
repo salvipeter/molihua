@@ -249,31 +249,34 @@
       (display "1 "))
     (get-output-string (current-output-port))))
 
+(define (write-patch-mgbs patch filename)
+  (with-output-to-file filename
+    (lambda ()
+      (let ((n (length patch)))
+        (display 1) (newline)           ; # of loops
+        (display n) (newline)           ; # of sides
+        (for-each (lambda (ribbon)
+                    (let ((deg (- (length (car ribbon)) 1)))
+                      (display deg) (display " ")     ; s-deg
+                      (display deg) (display " ")     ; h-deg
+                      (display "2 0") (newline)       ; layers ribcp?
+                      (display (knot-string deg #f)) (newline)) ; s-knots
+                    (for-each (lambda (p)
+                                (display (car p)) (display " ")
+                                (display (cadr p)) (display " ")
+                                (display (caddr p)) (newline))
+                              (append (car ribbon) (cdr ribbon))))
+                  patch)
+        (display "400 200") (newline)))))
+
 (define (write-patches-mgbs filename-prefix)
   (do ((index 0)
        (i 0 (+ i 1)))
-      ((= i (vector-length faces)))
+      ((= i (vector-length ribbons)))
     (when (or (not only-one-patch)
               (= only-one-patch i))
-      (with-output-to-file
-          (string-append filename-prefix (number->string (+ i 1)) ".mgbs")
-        (lambda ()
-          (let ((n (length (vector-ref faces i))))
-            (display 1) (newline)       ; # of loops
-            (display n) (newline)       ; # of sides
-            (for-each (lambda (ribbon)
-                        (let ((deg (- (length (car ribbon)) 1)))
-                          (display deg) (display " ") ; s-deg
-                          (display deg) (display " ") ; h-deg
-                          (display "2 0") (newline)   ; layers ribcp?
-                          (display (knot-string deg #f)) (newline)) ; s-knots
-                        (for-each (lambda (p)
-                                    (display (car p)) (display " ")
-                                    (display (cadr p)) (display " ")
-                                    (display (caddr p)) (newline))
-                                  (append (car ribbon) (cdr ribbon))))
-                      (vector-ref ribbons i))
-            (display "400 200") (newline))))))) ; curve-res triangle-res
+      (write-patch-mgbs (vector-ref ribbons i)
+                        (string-append filename-prefix (number->string (+ i 1)) ".mgbs")))))
 
 (define (write-qds ribbons filename)
   (with-output-to-file filename

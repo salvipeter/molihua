@@ -692,6 +692,12 @@
           (map (lambda (p q) (v+ p q))
                (list P0 P1 P2 P3) (list Q0 Q1 Q2 Q3)))))
 
+(define (direction-blend-cubic-tomi r1 r2)
+  (cons (car r1)
+        (map (lambda (p q1 q2)
+               (v+ p (v* (v- q1 q2) 1/2)))
+             (car r1) (cdr r1) (reverse (cdr r2)))))
+
 (define (elevate lst)
   (let ((n (length lst)))
     (let loop ((i 1) (cpts (list (car lst))) (lst lst))
@@ -901,6 +907,7 @@
                                    (opp-face (vector-ref ribbons (car opp)))
                                    (opp-ribbon (list-ref opp-face (cdr opp))))
                               ((case direction-blend-type
+                                 ((cubic-tomi-simple) direction-blend-cubic-tomi)
                                  ((quartic-simple quartic-no-alpha) direction-blend-quartic)
                                  ((quartic-tomi-simple quartic-tomi-no-alpha)
                                   direction-blend-quartic-tomi)

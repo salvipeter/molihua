@@ -85,6 +85,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   dblendCombo->addItem("Cubic");
   dblendCombo->addItem("Cubic - simple");
   dblendCombo->addItem("Cubic - no alpha");
+  dblendCombo->addItem("CubicTomi - simple");
   dblendCombo->addItem("Quartic - simple");
   dblendCombo->addItem("Quartic - no alpha");
   dblendCombo->addItem("QuarticTomi - simple");
@@ -157,8 +158,8 @@ void Options::tangentScaleChanged(double scale) {
 }
 
 void Options::dblendChanged(int index) {
-  std::array<std::string, 10> types = {
-    "none", "cubic", "cubic-simple", "cubic-no-alpha",
+  std::array<std::string, 11> types = {
+    "none", "cubic", "cubic-simple", "cubic-no-alpha", "cubic-tomi-simple",
     "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple", "quartic-tomi-no-alpha",
     "quintic", "quintic-tomi"
   };

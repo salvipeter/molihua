@@ -4,6 +4,7 @@
 
 #include <libcdgbs/SurfGBS.hpp>
 
+#include "options.hh"
 #include "ph-gb.hh"
 
 PHGB::PHGB(std::string filename) : Object(filename) {
@@ -203,7 +204,8 @@ void PHGB::updateBaseMesh() {
           cpts.push_back(Geometry::Point3D(r[i][j].data()));
       ribbons[0].emplace_back(deg, 1, cpts);
     }
-    surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh);
+    surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh,
+                                   !!Options::instance()->reparam());
     mergeMeshes(mesh, patch_mesh, ++id);
   }
   Object::updateBaseMesh(false, false);

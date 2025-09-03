@@ -196,6 +196,7 @@ void Options::bsplineConcaveChanged(Qt::CheckState state) {
     reparamBox->setEnabled(true);
   else
     reparamBox->setEnabled(false);
+  viewer->reload();
 }
 
 std::optional<double> Options::reparam() const {

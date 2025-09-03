@@ -13,6 +13,11 @@
 #include "options.hh"
 #include "viewer.hh"
 
+Options *Options::instance(Viewer *viewer) {
+  static Options *instance = new Options(viewer);
+  return instance;
+}
+
 Options::Options(Viewer *viewer) : viewer(viewer) {
   auto master = new QVBoxLayout();
 
@@ -103,6 +108,20 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   connect(quinticCubicCheck, &QCheckBox::checkStateChanged, this, &Options::quinticCubicChanged);
   quinticCubicChanged(quinticCubicCheck->checkState());
 
+  bsplineConcaveCheck = new QCheckBox("B-Spline concave edges");
+  bsplineConcaveCheck->setChecked(true);
+  geometryLayout->addWidget(bsplineConcaveCheck);
+  geometryLayout->addWidget(new QLabel("B-spline reparameterization:"));
+  reparamBox = new QDoubleSpinBox();
+  reparamBox->setRange(0, 1);
+  reparamBox->setValue(0.0);
+  reparamBox->setSingleStep(0.1);
+  geometryLayout->addWidget(reparamBox);
+  connect(bsplineConcaveCheck, &QCheckBox::checkStateChanged, 
+          this, &Options::bsplineConcaveChanged);
+  bsplineConcaveChanged(bsplineConcaveCheck->checkState());
+  connect(reparamBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);
+
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);
   auto miscLayout = new QVBoxLayout();
@@ -170,6 +189,19 @@ void Options::dblendChanged(int index) {
 void Options::quinticCubicChanged(Qt::CheckState state) {
   scm_c_define("cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
   viewer->reload();
+}
+
+void Options::bsplineConcaveChanged(Qt::CheckState state) {
+  if (state == Qt::Checked)
+    reparamBox->setEnabled(true);
+  else
+    reparamBox->setEnabled(false);
+}
+
+std::optional<double> Options::reparam() const {
+  if (bsplineConcaveCheck->checkState() == Qt::Checked)
+    return { reparamBox->value() };
+  return {};
 }
 
 void Options::exportClicked() {

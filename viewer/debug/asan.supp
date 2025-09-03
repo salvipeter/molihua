@@ -1,0 +1,16 @@
+# Suppress leaks from libfontconfig
+leak:libfontconfig
+leak:FcConfig
+leak:FcPattern
+leak:libfontconfig.so
+
+# Suppress GLib memory allocations
+leak:g_malloc
+leak:g_slice_alloc
+leak:g_slice_alloc0
+leak:libglib-2.0.so
+
+# Suppress Guile memory allocations
+#leak:libguile-3.0.so
+#leak:scm_
+#leak:guile_

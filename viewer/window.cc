@@ -65,7 +65,7 @@ Window::Window(QApplication *parent) :
   visMenu->addAction(slicingAction);
 
   auto scroll = new QScrollArea();
-  scroll->setWidget(new Options(viewer));
+  scroll->setWidget(Options::instance(viewer));
 
   auto dock = new QDockWidget("Options", this);
   dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);

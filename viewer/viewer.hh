@@ -28,6 +28,8 @@ public:
   void setSlicingScaling(double scaling);
   void deleteObjects();
   bool open(std::string filename);
+
+public slots:
   void reload();
 
 signals:

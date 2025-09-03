@@ -2,6 +2,8 @@
 
 #include <QWidget>
 
+class QCheckBox;
+class QDoubleSpinBox;
 class QSpinBox;
 class Viewer;
 
@@ -9,7 +11,8 @@ class Options : public QWidget {
   Q_OBJECT
 
 public:
-  Options(Viewer *viewer);
+  static Options *instance(Viewer *v = nullptr); // Viewer needed only at construction time
+  std::optional<double> reparam() const;
 
 public slots:
   void fullnessChanged(double full);
@@ -21,9 +24,19 @@ public slots:
   void tangentScaleChanged(double scale);
   void dblendChanged(int index);
   void quinticCubicChanged(Qt::CheckState state);
+  void bsplineConcaveChanged(Qt::CheckState state);
   void exportClicked();
 
 private:
+  // Singleton pattern
+  Options(Viewer *viewer);
+  Options(const Options &) = delete;
+  Options &operator=(const Options &) = delete;
+  Options(Options &) = delete;
+  Options &operator=(Options &) = delete;
+
   Viewer *viewer;
   QSpinBox *selectedBox;
+  QCheckBox *bsplineConcaveCheck;
+  QDoubleSpinBox *reparamBox;
 };

@@ -204,8 +204,11 @@ void PHGB::updateBaseMesh() {
           cpts.push_back(Geometry::Point3D(r[i][j].data()));
       ribbons[0].emplace_back(deg, 1, cpts);
     }
-    surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh,
-                                   !!Options::instance()->reparam());
+    if (Options::instance()->reparam())
+      surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh,
+                                     true, *Options::instance()->reparam());
+    else
+      surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh, false);
     mergeMeshes(mesh, patch_mesh, ++id);
   }
   Object::updateBaseMesh(false, false);

@@ -69,7 +69,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
   tanscaleBox->setRange(0.01, 10.0);
-  tanscaleBox->setValue(1.33);
+  tanscaleBox->setValue(1.0);
   tanscaleBox->setSingleStep(0.1);
   tangentScaleChanged(tanscaleBox->value());
   geometryLayout->addWidget(tanscaleBox);
@@ -97,7 +97,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   dblendCombo->addItem("QuarticTomi - no alpha");
   dblendCombo->addItem("Quintic");
   dblendCombo->addItem("QuinticTomi");
-  dblendCombo->setCurrentIndex(1);
+  dblendCombo->setCurrentIndex(4);
   geometryLayout->addWidget(dblendCombo);
   connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
   dblendChanged(dblendCombo->currentIndex());
@@ -113,7 +113,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(bsplineConcaveCheck);
   geometryLayout->addWidget(new QLabel("B-spline reparameterization:"));
   reparamBox = new QDoubleSpinBox();
-  reparamBox->setRange(0, 1);
+  reparamBox->setRange(-1.0, 1.0);
   reparamBox->setValue(0.0);
   reparamBox->setSingleStep(0.1);
   geometryLayout->addWidget(reparamBox);

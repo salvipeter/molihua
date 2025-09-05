@@ -13,6 +13,8 @@ class Options : public QWidget {
 public:
   static Options *instance(Viewer *v = nullptr); // Viewer needed only at construction time
   std::optional<double> reparam() const;
+  bool hsplit() const;
+  bool C1() const;
 
 public slots:
   void fullnessChanged(double full);
@@ -39,4 +41,5 @@ private:
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;
   QDoubleSpinBox *reparamBox;
+  QCheckBox *hsplitCheck, *C1Check;
 };

@@ -13,6 +13,14 @@
 #include "options.hh"
 #include "viewer.hh"
 
+bool Options::hsplit() const {
+  return hsplitCheck->checkState() == Qt::Checked;
+}
+
+bool Options::C1() const {
+  return C1Check->checkState() == Qt::Checked;
+}
+
 Options *Options::instance(Viewer *viewer) {
   static Options *instance = new Options(viewer);
   return instance;
@@ -121,6 +129,16 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
           this, &Options::bsplineConcaveChanged);
   bsplineConcaveChanged(bsplineConcaveCheck->checkState());
   connect(reparamBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);
+
+  hsplitCheck = new QCheckBox("Restricted parameterization");
+  hsplitCheck->setChecked(true);
+  geometryLayout->addWidget(hsplitCheck);
+  connect(hsplitCheck, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
+
+  C1Check = new QCheckBox("C1 ribbon merge");
+  C1Check->setChecked(false);
+  geometryLayout->addWidget(C1Check);
+  connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);

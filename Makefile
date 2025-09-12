@@ -1,4 +1,4 @@
-all: mgbs2obj
+all: mgbs2obj combine-ribbons
 
 CDGBS=../libcdgbs
 EIGEN=/usr/include/eigen3
@@ -20,4 +20,7 @@ LIBS=\
 	-L$(OPENMESH)/lib -lOpenMeshCore
 
 mgbs2obj: mgbs2obj.cc
+	$(CXX) -o $@ $< $(FLAGS) $(INCLUDES) $(LIBS)
+
+combine-ribbons: combine-ribbons.cc
 	$(CXX) -o $@ $< $(FLAGS) $(INCLUDES) $(LIBS)

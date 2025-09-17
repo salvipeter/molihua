@@ -477,78 +477,26 @@
 
 ;;; Assumes that the first corner is not concave
 (define (offset-face loops)
-  (case (length loops)
-    ((3) '(((.866025 -0.9 0.4)
-            (.866025 -0.9 -0.4)
-            (.866025 0.9 -0.4)
-            (.866025 0.9 0.4))
-           ((concave
-             (.866025 0.3 -0.3)
-             (.866025 0.1 -0.2))
-            (concave
-             (.866025 0.1 0.2)
-             (.866025 0.3 0.3))
-            (concave
-             (.866025 0.7 0.3)
-             (.866025 0.8 0.2))
-            (concave
-             (.866025 0.8 -0.2)
-             (.866025 0.7 -0.3)))
-           ((concave
-             (.866025 -0.7 -0.3)
-             (.866025 -0.8 -0.2))
-            (concave
-             (.866025 -0.8 0.2)
-             (.866025 -0.7 0.3))
-            (concave
-             (.866025 -0.3 0.3)
-             (.866025 -0.1 0.2))
-            (concave
-             (.866025 -0.1 -0.2)
-             (.866025 -0.3 -0.3)))))
-    ((2) '(((-0.7 1 -0.5)
-            (-0.7 1 0.5)
-            (0 1 0.9)
-            (0.7 1 0.5)
-            (0.7 1 -0.5)
-            (0 1 -0.9))
-           ((concave
-             (-0.1 1 -0.6)
-             (0.1 1 -0.6))
-            (concave
-             (0.5 1 -0.4)
-             (0.6 1 -0.3))
-            (concave
-             (0.6 1 0.3)
-             (0.5 1 0.4))
-            (concave
-             (0.1 1 0.6)
-             (-0.1 1 0.6))
-            (concave
-             (-0.5 1 0.4)
-             (-0.6 1 0.3))
-            (concave
-             (-0.6 1 -0.3)
-             (-0.5 1 -0.4)))))
-    ((1)
-     (map (lambda (verts)
-            (let* ((lines (map cons verts (append (cdr verts) (list (car verts)))))
-                   (normal (face-normal verts))
-                   (offsets (map (lambda (l p n) (offset-line lines l p n (/ fullness 2) normal))
-                                 lines (rotate lines) (append (cdr lines) (list (car lines))))))
-              (let loop ((l1 (rotate lines)) (l2 lines)
-                         (o1 (rotate offsets)) (o2 offsets))
-                (cond ((null? l1)
-                       '())
-                      ((concave-corner? (car l1) (car l2) normal)
-                       (cons (list 'concave
-                                   (line-line-intersection (car o1) (car l2))
-                                   (line-line-intersection (car o2) (car l1)))
-                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))
-                      (else
-                       (cons (line-line-intersection (car o1) (car o2))
-                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
-          loops))))
+  (map (lambda (verts)
+         (let* ((lines (map cons verts (append (cdr verts) (list (car verts)))))
+                (normal (v* (face-normal verts)
+                            (if (equal? verts (car loops)) 1 -1)))
+                ;; (offsets (map (lambda (l p n) (offset-line lines l p n (/ fullness 2) normal))
+                ;;               lines (rotate lines) (append (cdr lines) (list (car lines)))))
+                (offsets (map (lambda (l) (constant-offset-line l normal 0.22)) lines)))
+           (let loop ((l1 (rotate lines)) (l2 lines)
+                      (o1 (rotate offsets)) (o2 offsets))
+             (cond ((null? l1)
+                    '())
+                   ((concave-corner? (car l1) (car l2) normal)
+                    (cons (list 'concave
+                                (line-line-intersection (car o1) (car l2))
+                                (line-line-intersection (car o2) (car l1)))
+                          (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))
+                   (else
+                    (cons (line-line-intersection (car o1) (car o2))
+                          (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
+       loops))
 
 ;;; Returns (verts* . faces*)
 (define (generate-offsets vertices faces)

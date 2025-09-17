@@ -273,12 +273,16 @@ bool PHGB::reload() {
       handles.push_back(cage.add_vertex(p));
     }
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM lst = scm_vector_ref(faces, scm_from_uint(i));
-      size_t n = scm_to_uint(scm_length(lst));
-      std::vector<CageMesh::VertexHandle> face;
-      for (size_t j = 0; j < n; ++j)
-        face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
-      cage.add_face(face);
+      SCM loops = scm_vector_ref(faces, scm_from_uint(i));
+      size_t m = scm_to_uint(scm_length(loops));
+      for (size_t l = 0; l < m; ++l) {
+        SCM lst = scm_list_ref(loops, scm_from_uint(l));
+        size_t n = scm_to_uint(scm_length(lst));
+        std::vector<CageMesh::VertexHandle> face;
+        for (size_t j = 0; j < n; ++j)
+          face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
+        cage.add_face(face);
+      }
     }
   }
 

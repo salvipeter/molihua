@@ -700,10 +700,10 @@
            (face-indices (vector-ref vertex-faces v))
            (polys (map (lambda (i)
                          (let find ((lst face-indices))
-                           (if (memq i (vector-ref offset-faces (car lst)))
+                           (if (memq i (nested-ref offset-faces (car lst)))
                                (map (lambda (j)
                                       (vector-ref vertices j))
-                                    (vector-ref faces (car lst)))
+                                    (nested-ref faces (car lst)))
                                (find (cdr lst)))))
                        indices)))
       ;; 1. Project the j-k chamfer line to i's plane

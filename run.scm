@@ -1,23 +1,24 @@
-(define filename "models/elretoltkocka.obj")
+(define filename "models/bogre.obj")
 
 ;;; Shape parameters
 (define fullness 0.7)
-(define shrink-chamfers? #t)
-(define tangent-scale 4/3)
+(define shrink-chamfers? #f)
+(define tangent-scale 1)
 (define midvector-scale 1)
 
 ;;; Direction blend options
 ; Possible values:
+; - none
 ; - cubic, cubic-simple, cubic-no-alpha, cubic-tomi-simple
 ; - quartic-simple, quartic-no-alpha, quartic-tomi-simple, quartic-tomi-no-alpha
 ; - quintic, quintic-tomi
-(define direction-blend-type 'cubic)
+(define direction-blend-type 'cubic-tomi-simple)
 (define cubic-cross-degree? #t)
 
 ;;; Output
 (define only-one-patch #f)
 (define resolution 200)
-(define generate-model? #t)
+(define generate-model? #f)
 
 (load "molihua.scm")
 (load-model filename)

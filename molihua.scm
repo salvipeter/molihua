@@ -2,12 +2,17 @@
 
 
 ;;; Global variables
-(define vertices #f)
-(define faces #f)
-(define offset-vertices #f)
-(define offset-faces #f)
-(define vertex-faces #f)
-(define ribbons #f)
+(define vertices #f)                    ; vector of all vertices in the model
+(define faces #f)                       ; vector of all faces (face ~ list of outer + inner loops);
+                                        ;   a loop is a list of indices to `vertices`
+(define offset-vertices #f)             ; vector of all offset vertices
+(define offset-faces #f)                ; vector of all offset faces, similarly to `faces`,
+                                        ;   but with indices to `offset-vertices`
+(define vertex-faces #f)                ; vector containing adjacent face indices for vertex i;
+                                        ;   an index is a cons cell (face-index . loop-index)
+(define ribbons #f)                     ; vector of ribbons corresponding to the faces;
+                                        ;   ((loop1-edge1 loop1-edge2 ...) (loop2-edge1 ...) ...)
+                                        ;   note: edge1 is between the first two vertices etc.
 
 
 ;;; R7RS compatibility
@@ -137,20 +142,27 @@
     (lambda ()
       (do ((v '())
            (f '())
+           (holes 0)
            (line (read-line) (read-line)))
           ((eof-object? line)
-           (cons (list->vector (reverse v))
+           (list (list->vector (reverse v))
                  (list->vector (reverse f))))
         (let ((type (or (and (< (string-length line) 2) "")
                         (substring line 0 2))))
-          (cond ((string-ci=? type "v ")
-                 (let ((vertex (map string->number (cdr (split-string line)))))
-                   (set! v (cons vertex v))))
+          (cond ((string-ci=? type "#h")
+                 (set! holes (string->number (cadr (split-string line)))))
+                ((string-ci=? type "v ")
+                    (let ((vertex (map string->number (cdr (split-string line)))))
+                      (set! v (cons vertex v))))
                 ((string-ci=? type "f ")
                  (let ((face (map (lambda (s)
                                     (- (string->number s) 1))
                                   (cdr (split-string line)))))
-                   (set! f (cons face f))))))))))
+                   (cond ((> holes 0)
+                          (set! holes (- holes 1))
+                          (set-car! f (append (car f) (list face))))
+                         (else
+                          (set! f (cons (list face) f))))))))))))
 
 (define (write-vertex v)
   (display "v")
@@ -164,22 +176,24 @@
   (with-output-to-file filename
     (lambda ()
       (vector-for-each write-vertex offset-vertices)
-      (let ((write-face (lambda (face)
-                          (display "f")
-                          (for-each (lambda (v)
-                                      (cond ((pair? v)
-                                             (display " ")
-                                             (display (+ (car v) 1))
-                                             (display " ")
-                                             (display (+ (cdr v) 1)))
-                                            (else
-                                             (display " ")
-                                             (display (+ v 1)))))
-                                    face)
-                          (newline))))
-        (if only-one-patch
-            (write-face (vector-ref offset-faces only-one-patch))
-            (vector-for-each write-face offset-faces))))))
+      (define (write-loop loop)
+        (display "f")
+        (for-each (lambda (v)
+                    (cond ((pair? v)
+                           (display " ")
+                           (display (+ (car v) 1))
+                           (display " ")
+                           (display (+ (cdr v) 1)))
+                          (else
+                           (display " ")
+                           (display (+ v 1)))))
+                  loop)
+        (newline))
+      (define (write-face face)
+        (map write-loop face))
+      (if only-one-patch
+          (write-face (vector-ref offset-faces only-one-patch))
+          (vector-for-each write-face offset-faces)))))
 
 (define (write-chamfers filename)
   (with-output-to-file filename
@@ -232,8 +246,10 @@
           ((= i (vector-length faces)))
         (when (or (not only-one-patch)
                   (= only-one-patch i))
-          (for-each (lambda (ribbon)
-                      (set! index (show-ribbon ribbon index)))
+          (for-each (lambda (loop)
+                      (for-each (lambda (ribbon)
+                                  (set! index (show-ribbon ribbon index)))
+                                loop)) 
                     (vector-ref ribbons i)))))))
 
 (define (knot-string degree with-size?)
@@ -252,21 +268,24 @@
 (define (write-patch-mgbs patch filename)
   (with-output-to-file filename
     (lambda ()
-      (let ((n (length patch)))
-        (display 1) (newline)           ; # of loops
-        (display n) (newline)           ; # of sides
-        (for-each (lambda (ribbon)
-                    (let ((deg (- (length (car ribbon)) 1)))
-                      (display deg) (display " ")     ; s-deg
-                      (display deg) (display " ")     ; h-deg
-                      (display "2 0") (newline)       ; layers ribcp?
-                      (display (knot-string deg #f)) (newline)) ; s-knots
-                    (for-each (lambda (p)
-                                (display (car p)) (display " ")
-                                (display (cadr p)) (display " ")
-                                (display (caddr p)) (newline))
-                              (append (car ribbon) (cdr ribbon))))
+      (let ((k (length patch)))
+        (display k) (newline)                                               ; # of loops
+        (for-each (lambda (loop)
+                    (display (length loop)) (newline)                       ; # of sides
+                    (for-each (lambda (ribbon)
+                                (let ((deg (- (length (car ribbon)) 1)))
+                                  (display deg) (display " ")               ; s-deg
+                                  (display deg) (display " ")               ; h-deg
+                                  (display "2 0") (newline)                 ; layers ribcp?
+                                  (display (knot-string deg #f)) (newline)) ; s-knots
+                                (for-each (lambda (p)
+                                            (display (car p)) (display " ")
+                                            (display (cadr p)) (display " ")
+                                            (display (caddr p)) (newline))
+                                          (append (car ribbon) (cdr ribbon))))
+                              loop))
                   patch)
+
         (display "400 200") (newline)))))
 
 (define (write-patches-mgbs filename-prefix)
@@ -277,24 +296,6 @@
               (= only-one-patch i))
       (write-patch-mgbs (vector-ref ribbons i)
                         (string-append filename-prefix (number->string (+ i 1)) ".mgbs")))))
-
-(define (write-qds ribbons filename)
-  (with-output-to-file filename
-    (lambda ()
-      (display (length ribbons))
-      (newline)
-      (for-each (lambda (ribbon)
-                  (let ((deg (- (length (car ribbon)) 1)))
-                    (display "1 ") (display deg) (newline)
-                    (display "4 0 0 1 1") (newline)
-                    (display (knot-string deg #t)) (newline)
-                    )
-                  (for-each (lambda (p)
-                              (display (car p)) (display " ")
-                              (display (cadr p)) (display " ")
-                              (display (caddr p)) (newline))
-                            (append (car ribbon) (cdr ribbon))))
-                ribbons))))
 
 
 ;;; Geometry procedures
@@ -462,59 +463,129 @@
                                   (select (cdr candidates) d* off*)))))))))))
 
 ;;; Assumes that the first corner is not concave
-(define (offset-face verts)
-  (let* ((lines (map cons verts (append (cdr verts) (list (car verts)))))
-         (normal (face-normal verts))
-         (offsets (map (lambda (l p n) (offset-line lines l p n (/ fullness 2) normal))
-                       lines (rotate lines) (append (cdr lines) (list (car lines))))))
-    (let loop ((l1 (rotate lines)) (l2 lines)
-               (o1 (rotate offsets)) (o2 offsets))
-      (cond ((null? l1)
-             '())
-            ((concave-corner? (car l1) (car l2) normal)
-             (cons (list 'concave
-                         (line-line-intersection (car o1) (car l2))
-                         (line-line-intersection (car o2) (car l1)))
-                   (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))
-            (else
-             (cons (line-line-intersection (car o1) (car o2))
-                   (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
+(define (offset-face loops)
+  (case (length loops)
+    ((3) '(((.866025 -0.9 0.4)
+            (.866025 -0.9 -0.4)
+            (.866025 0.9 -0.4)
+            (.866025 0.9 0.4))
+           ((concave
+             (.866025 -0.7 -0.3)
+             (.866025 -0.8 -0.2))
+            (concave
+             (.866025 -0.8 0.2)
+             (.866025 -0.7 0.3))
+            (concave
+             (.866025 -0.3 0.3)
+             (.866025 -0.1 0.2))
+            (concave
+             (.866025 -0.1 -0.2)
+             (.866025 -0.3 -0.3)))
+           ((concave
+             (.866025 0.3 -0.3)
+             (.866025 0.1 -0.2))
+            (concave
+             (.866025 0.1 0.2)
+             (.866025 0.3 0.3))
+            (concave
+             (.866025 0.7 0.3)
+             (.866025 0.8 0.2))
+            (concave
+             (.866025 0.8 -0.2)
+             (.866025 0.7 -0.3)))))
+    ((2) '(((-0.7 1 -0.5)
+            (-0.7 1 0.5)
+            (0 1 0.9)
+            (0.7 1 0.5)
+            (0.7 1 -0.5)
+            (0 1 -0.9))
+           ((concave
+             (-0.1 1 -0.6)
+             (0.1 1 -0.6))
+            (concave
+             (0.5 1 -0.4)
+             (0.6 1 -0.3))
+            (concave
+             (0.6 1 0.3)
+             (0.5 1 0.4))
+            (concave
+             (0.1 1 0.6)
+             (-0.1 1 0.6))
+            (concave
+             (-0.5 1 0.4)
+             (-0.6 1 0.3))
+            (concave
+             (-0.6 1 -0.3)
+             (-0.5 1 -0.4)))))
+    ((1)
+     (map (lambda (verts)
+            (let* ((lines (map cons verts (append (cdr verts) (list (car verts)))))
+                   (normal (face-normal verts))
+                   (offsets (map (lambda (l p n) (offset-line lines l p n (/ fullness 2) normal))
+                                 lines (rotate lines) (append (cdr lines) (list (car lines))))))
+              (let loop ((l1 (rotate lines)) (l2 lines)
+                         (o1 (rotate offsets)) (o2 offsets))
+                (cond ((null? l1)
+                       '())
+                      ((concave-corner? (car l1) (car l2) normal)
+                       (cons (list 'concave
+                                   (line-line-intersection (car o1) (car l2))
+                                   (line-line-intersection (car o2) (car l1)))
+                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))
+                      (else
+                       (cons (line-line-intersection (car o1) (car o2))
+                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
+          loops))))
 
 ;;; Returns (verts* . faces*)
-(define (generate-offsets vertices faces)
+(define (generate-offsets vertices faces holes)
+  (define (get-points indices)
+    (map (lambda (v)
+           (vector-ref vertices v))
+         indices))
+  (define (collect-holes f)
+    (let collect ((h holes))
+      (cond ((null? h) '())
+            ((eq? (caar h) f) (cons (cdar h) (collect (cdr h))))
+            (else (collect (cdr h))))))
   (do ((rfaces (make-vector (vector-length faces)))
        (rvertices '())
        (index 0)
        (i 0 (+ i 1)))
       ((= i (vector-length faces))
        (cons (list->vector (reverse rvertices)) rfaces))
-    (let* ((off (offset-face
-                 (map (lambda (v)
-                        (vector-ref vertices v))
-                      (vector-ref faces i))))
-           (flat (apply append (map (lambda (x)
-                                      (if (eq? (car x) 'concave)
-                                          (cdr x)
-                                          (list x)))
-                                    off)))
-           (n (length flat)))
-      (set! rvertices (append (reverse flat) rvertices))
-      (vector-set! rfaces i
-                   (let loop ((lst off) (i index))
-                     (cond ((null? lst)
-                            '())
-                           ((eq? (caar lst) 'concave)
-                            (cons (cons i (+ i 1))
-                                  (loop (cdr lst) (+ i 2))))
-                           (else
-                            (cons i (loop (cdr lst) (+ i 1)))))))
-      (set! index (+ index n)))))
+    (for-each (lambda (off)
+                (let* ((flat (apply append (map (lambda (x)
+                                                  (if (eq? (car x) 'concave)
+                                                      (cdr x)
+                                                      (list x)))
+                                                off)))
+                       (n (length flat)))
+                  (set! rvertices (append (reverse flat) rvertices))
+                  (vector-set! rfaces i
+                               (let loop ((lst off) (i index))
+                                 (cond ((null? lst)
+                                        '())
+                                       ((eq? (caar lst) 'concave)
+                                        (cons (cons i (+ i 1))
+                                              (loop (cdr lst) (+ i 2))))
+                                       (else
+                                        (cons i (loop (cdr lst) (+ i 1)))))))
+                  (set! index (+ index n))))
+              (offset-face (cons (get-points (vector-ref faces i))
+                                 (map get-points (collect-holes i)))))))
 
 (define (update-topology)
   (set! vertex-faces
     (do ((result (make-vector (vector-length vertices) '()))
          (i 0 (+ i 1)))
         ((= i (vector-length faces))
+         (for-each (lambda (h)
+                     (for-each (lambda (v)
+                                 (vector-set! result v
+                                              (cons (car h) (vector-ref result v))))
+                               (cdr h)))
+                   holes)
          (let loop ((j (- (vector-length result) 1)) (acc '()))
            (if (< j 0)
                (list->vector acc)
@@ -527,18 +598,28 @@
                 (vector-ref faces i)))))
 
 (define (update-offsets)
-  (let ((offsets (generate-offsets vertices faces)))
+  (let ((offsets (generate-offsets vertices faces holes)))
     (set! offset-vertices (car offsets))
     (set! offset-faces (cdr offsets))))
 
 ;;; Moves the adjacent face to the beginning
 ;;; Adjacency means that there is (u v) in one, and (v u) in the other
 (define (select-adjacent v face lst)
+  (define (face-with-vertex f)
+    (let ((lst (vector-ref faces f)))
+      (if (memq v lst)
+          lst
+          (let find ((hs holes))
+            (let ((h (car hs)))
+              (if (and (= (car h) f)
+                       (memq v (cdr h)))
+                  (cdr h)
+                  (find (cdr hs))))))))
   (let loop ((lst lst) (acc '()))
     (cond ((null? lst)
            (error "cannot find adjacent face"))
-          ((let ((a (vector-ref faces face))
-                 (b (vector-ref faces (car lst))))
+          ((let ((a (face-with-vertex face))
+                 (b (face-with-vertex (car lst))))
              (or (= (next-element a v) (prev-element b v))
                  (= (prev-element a v) (next-element b v))))
            (cons (car lst) (append acc (cdr lst))))
@@ -569,7 +650,8 @@
   (let* ((face-indices (vector-ref vertex-faces v))
          (lst (map (lambda (f)
                      (list-ref (vector-ref offset-faces f)
-                               (find-index v (vector-ref faces f))))
+                               (or (find-index v (vector-ref faces f))
+                                   (error "chamfer: cannot find index"))))
                    face-indices))
          (face (map (lambda (v) (vector-ref vertices v))
                     (vector-ref faces (car face-indices))))
@@ -1001,7 +1083,8 @@
 (define (load-model filename)
   (let ((model (read-obj filename)))
     (set! vertices (car model))
-    (set! faces (cdr model)))
+    (set! faces (cadr model))
+    (set! holes (caddr model)))
   (update-topology)
   (update-offsets)
   (when shrink-chamfers?

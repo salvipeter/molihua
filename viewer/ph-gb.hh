@@ -19,8 +19,10 @@ private:
   CageMesh cage;
   using Curve = std::vector<Vector>;
   using Ribbon = std::array<Curve, 2>;
-  using Patch = std::vector<Ribbon>;
+  using Loop = std::vector<Ribbon>;
+  using Patch = std::vector<Loop>;
   std::vector<Patch> patches;
   std::vector<Vector> offset_vertices;
-  std::vector<std::vector<size_t>> offset_faces, chamfers;
+  std::vector<std::vector<size_t>> chamfers;
+  std::vector<std::vector<std::vector<size_t>>> offset_faces;
 };

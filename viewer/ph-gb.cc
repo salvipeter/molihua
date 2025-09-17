@@ -43,11 +43,13 @@ void PHGB::draw(const Visualization &vis) const {
     for (size_t i = 0; i < offset_faces.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
         continue;
-      const auto &f = offset_faces[i];
-      glBegin(GL_LINE_LOOP);
-      for (auto v : f)
-        glVertex3dv(offset_vertices[v].data());
-      glEnd();
+      const auto &fs = offset_faces[i];
+      for (const auto &f : fs) {
+        glBegin(GL_LINE_LOOP);
+        for (auto v : f)
+          glVertex3dv(offset_vertices[v].data());
+        glEnd();
+      }
     }
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
@@ -77,20 +79,21 @@ void PHGB::draw(const Visualization &vis) const {
       if (show_only > 0 && show_only - 1 != i)
         continue;
       const auto &patch = patches[i];
-      for (const auto &ribbon : patch) {
-        size_t resolution = 100;
-        glBegin(GL_LINE_STRIP);
-        for (size_t i = 0; i <= resolution; ++i) {
-          double u = (double)i / resolution;
-          auto tmp = ribbon[0];
-          size_t n = tmp.size() - 1;
-          for (size_t k = 1; k <= n; ++k)
-            for (size_t i = 0; i <= n - k; ++i)
-              tmp[i] = tmp[i] * (1 - u) + tmp[i+1] * u;
-          glVertex3dv(tmp[0].data());
+      for (const auto &loop : patch)
+        for (const auto &ribbon : loop) {
+          size_t resolution = 100;
+          glBegin(GL_LINE_STRIP);
+          for (size_t i = 0; i <= resolution; ++i) {
+            double u = (double)i / resolution;
+            auto tmp = ribbon[0];
+            size_t n = tmp.size() - 1;
+            for (size_t k = 1; k <= n; ++k)
+              for (size_t i = 0; i <= n - k; ++i)
+                tmp[i] = tmp[i] * (1 - u) + tmp[i+1] * u;
+            glVertex3dv(tmp[0].data());
+          }
+          glEnd();
         }
-        glEnd();
-      }
     }
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
@@ -104,20 +107,21 @@ void PHGB::draw(const Visualization &vis) const {
       if (show_only > 0 && show_only - 1 != i)
         continue;
       const auto &patch = patches[i];
-      for (const auto &ribbon : patch) {
-        for (const auto &row : ribbon) {
-          glBegin(GL_LINE_STRIP);
-          for (const auto &p : row)
-            glVertex3dv(p.data());
-          glEnd();
+      for (const auto &loop : patch)
+        for (const auto &ribbon : loop) {
+          for (const auto &row : ribbon) {
+            glBegin(GL_LINE_STRIP);
+            for (const auto &p : row)
+              glVertex3dv(p.data());
+            glEnd();
+          }
+          for (size_t j = 0; j < ribbon[0].size(); ++j) {
+            glBegin(GL_LINE_STRIP);
+            glVertex3dv(ribbon[0][j].data());
+            glVertex3dv(ribbon[1][j].data());
+            glEnd();
+          }
         }
-        for (size_t j = 0; j < ribbon[0].size(); ++j) {
-          glBegin(GL_LINE_STRIP);
-          glVertex3dv(ribbon[0][j].data());
-          glVertex3dv(ribbon[1][j].data());
-          glEnd();
-        }
-      }
     }
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
@@ -193,16 +197,19 @@ void PHGB::updateBaseMesh() {
   double edge_size = (box_max - box_min).norm() / resolution;
   size_t id = 0;
   for (const auto &patch : patches) {
+    size_t n_loops = patch.size();
     libcdgbs::Mesh patch_mesh;
     libcdgbs::SurfGBS surf;
-    std::vector<std::vector<libcdgbs::SurfGBS::Ribbon>> ribbons(1);
-    for (const auto &r : patch) {
-      Geometry::PointVector cpts;
-      auto deg = r[0].size() - 1;
-      for (size_t j = 0; j <= deg; ++j)
-        for (size_t i = 0; i < 2; ++i)
-          cpts.push_back(Geometry::Point3D(r[i][j].data()));
-      ribbons[0].emplace_back(deg, 1, cpts);
+    std::vector<std::vector<libcdgbs::SurfGBS::Ribbon>> ribbons(n_loops);
+    for (size_t loop = 0; loop < n_loops; ++loop) {
+      for (const auto &r : patch[loop]) {
+        Geometry::PointVector cpts;
+        auto deg = r[0].size() - 1;
+        for (size_t j = 0; j <= deg; ++j)
+          for (size_t i = 0; i < 2; ++i)
+            cpts.push_back(Geometry::Point3D(r[i][j].data()));
+        ribbons[loop].emplace_back(deg, 1, cpts);
+      }
     }
     if (Options::instance()->reparam())
       surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh, true,
@@ -280,21 +287,26 @@ bool PHGB::reload() {
     SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
     patches.resize(n_faces);
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM lst = scm_vector_ref(ribbons, scm_from_uint(i));
-      size_t n = scm_to_uint(scm_length(lst));
-      patches[i].resize(n);
-      for (size_t j = 0; j < n; ++j) {
-        SCM ribbon = scm_list_ref(lst, scm_from_uint(j));
-        std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
-        for (size_t k = 0; k < 2; ++k) {
-          patches[i][j][k].clear();
-          while (scm_null_p(curves[k]) == SCM_BOOL_F) {
-            SCM point = scm_car(curves[k]);
-            Vector p;
-            for (size_t c = 0; c < 3; ++c)
-              p[c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
-            patches[i][j][k].push_back(p);
-            curves[k] = scm_cdr(curves[k]);
+      SCM loops = scm_vector_ref(ribbons, scm_from_uint(i));
+      size_t m = scm_to_uint(scm_length(loops));
+      patches[i].resize(m);
+      for (size_t l = 0; l < m; ++l) {
+        SCM loop = scm_list_ref(loops, scm_from_uint(l));
+        size_t n = scm_to_uint(scm_length(loop));
+        patches[i][l].resize(n);
+        for (size_t j = 0; j < n; ++j) {
+          SCM ribbon = scm_list_ref(loop, scm_from_uint(j));
+          std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
+          for (size_t k = 0; k < 2; ++k) {
+            patches[i][l][j][k].clear();
+            while (scm_null_p(curves[k]) == SCM_BOOL_F) {
+              SCM point = scm_car(curves[k]);
+              Vector p;
+              for (size_t c = 0; c < 3; ++c)
+                p[c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+              patches[i][l][j][k].push_back(p);
+              curves[k] = scm_cdr(curves[k]);
+            }
           }
         }
       }
@@ -316,17 +328,22 @@ bool PHGB::reload() {
         p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
     }
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM lst = scm_vector_ref(faces, scm_from_uint(i));
-      size_t n = scm_to_uint(scm_length(lst));
+      SCM loops = scm_vector_ref(faces, scm_from_uint(i));
+      size_t m = scm_to_uint(scm_length(loops));
       auto &face = offset_faces[i];
-      face.clear();
-      for (size_t j = 0; j < n; ++j) {
-        SCM index = scm_list_ref(lst, scm_from_uint(j));
-        if (scm_is_pair(index)) {
-          face.push_back(scm_to_uint(scm_car(index)));
-          face.push_back(scm_to_uint(scm_cdr(index)));
-        } else
-          face.push_back(scm_to_uint(index));
+      face.resize(m);
+      for (size_t l = 0; l < m; ++l) {
+        SCM lst = scm_list_ref(loops, scm_from_uint(l));
+        size_t n = scm_to_uint(scm_length(lst));
+        face[l].clear();
+        for (size_t j = 0; j < n; ++j) {
+          SCM index = scm_list_ref(lst, scm_from_uint(j));
+          if (scm_is_pair(index)) {
+            face[l].push_back(scm_to_uint(scm_car(index)));
+            face[l].push_back(scm_to_uint(scm_cdr(index)));
+          } else
+            face[l].push_back(scm_to_uint(index));
+        }
       }
     }
     for (size_t i = 0; i < n_vertices; ++i) {

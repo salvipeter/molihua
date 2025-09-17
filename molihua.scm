@@ -440,6 +440,13 @@
                (and (same-side? a v m)
                     (same-side? b v m)))))))
 
+;;; As an alternative to `offset-line`
+(define (constant-offset-line segment normal offset)
+  (push-line segment (v+ (car segment)
+                         (vnormalize (cross-product normal
+                                                    (v- (cdr segment) (car segment)))))
+             offset))
+
 ;;; Find the offset of `segment` that is `ratio` of the maximum offset,
 ;;; where the maximum is at the first intersection point,
 ;;; considering intersections with other segments in `segments` excluding `prev` and `next`,
@@ -451,22 +458,22 @@
     (let loop ((lst segments)
                (d (if ok (line-point-distance segment v) +inf.0))
                (off (if ok (push-line segment v ratio) #f)))
-            (if (null? lst)
-                (or off (error "offset-line: cannot find offset"))
-                (let ((s (car lst)))
-                  (if (or (equal? s segment) (equal? s prev) (equal? s next))
-                      (loop (cdr lst) d off)
-                      (let select ((candidates (list (car s) (cdr s)
-                                                     (line-segment-intersection prev s)
-                                                     (line-segment-intersection next s)))
-                                   (d* d) (off* off))
-                        (if (null? candidates)
-                            (loop (cdr lst) d* off*)
-                            (let* ((v (car candidates))
-                                   (d? (if v (line-point-distance segment v) +inf.0)))
-                              (if (and (< d? d*) (in-wedge-region? v prev next normal))
-                                  (select (cdr candidates) d? (push-line segment v ratio))
-                                  (select (cdr candidates) d* off*)))))))))))
+      (if (null? lst)
+          (or off (error "offset-line: cannot find offset"))
+          (let ((s (car lst)))
+            (if (or (equal? s segment) (equal? s prev) (equal? s next))
+                (loop (cdr lst) d off)
+                (let select ((candidates (list (car s) (cdr s)
+                                               (line-segment-intersection prev s)
+                                               (line-segment-intersection next s)))
+                             (d* d) (off* off))
+                  (if (null? candidates)
+                      (loop (cdr lst) d* off*)
+                      (let* ((v (car candidates))
+                             (d? (if v (line-point-distance segment v) +inf.0)))
+                        (if (and (< d? d*) (in-wedge-region? v prev next normal))
+                            (select (cdr candidates) d? (push-line segment v ratio))
+                            (select (cdr candidates) d* off*)))))))))))
 
 ;;; Assumes that the first corner is not concave
 (define (offset-face loops)
@@ -723,6 +730,8 @@
             (let* ((t (vnormalize (v- pk* pj*)))
                    (d (v- pi (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
                    (line (cons (v+ pj d) (v+ pk d))))
+              (vector-set! offset-vertices (list-ref indices i) ; kutykurutty
+                           (v+ pk* (v* t (scalar-product t (v- pi pk*)))))
               (vector-set! offset-vertices (list-ref indices j)
                            (plane-line-intersection (poly->plane (list-ref polys j)) line))
               (vector-set! offset-vertices (list-ref indices k)

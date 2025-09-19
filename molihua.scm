@@ -668,20 +668,21 @@
                                       (vector-ref vertices j))
                                     (nested-ref faces (car lst)))
                                (find (cdr lst)))))
-                       indices)))
-      ;; 1. Project the j-k chamfer line to i's plane
+                       indices))
+           (normals (map face-normal polys)))
+      ;; 1. Project the j-k chamfer line to i's plane along the intersection of j & k planes
       ;; 2. If offset vertex i is on different side than the corner => OK
       ;; 3. Otherwise find the translation for the line to go through offset vertex i
       ;; 4. Translate offset vertices j and k by this vector
       ;; 5. Intersect the new j-k line by the j & k planes to get the new points
       (define (shrink-one! i j k)
-        (let* ((n (face-normal (list-ref polys i)))
-               (pi (list-ref points i))
+        (let* ((pi (list-ref points i))
                (pj (list-ref points j))
                (pk (list-ref points k))
-               (plane (cons corner n))
-               (pj* (project-to-plane plane pj))
-               (pk* (project-to-plane plane pk)))
+               (plane (cons corner (list-ref normals i)))
+               (dir (cross-product (list-ref normals j) (list-ref normals k)))
+               (pj* (plane-line-intersection plane (cons pj (v+ pj dir))))
+               (pk* (plane-line-intersection plane (cons pk (v+ pk dir)))))
           (when (same-side? (cons pj* pk*) pi corner)
             (let* ((t (vnormalize (v- pk* pj*)))
                    (d (v- pi (v+ pk* (v* t (scalar-product t (v- pi pk*))))))

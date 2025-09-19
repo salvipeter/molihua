@@ -1,4 +1,5 @@
-;;; Parameters (for debugging/experiments etc.)
+;;; Private parameters (for debugging/experiments etc.)
+(define fix-offset #f)                  ; offset size or #f
 
 
 ;;; Global variables
@@ -481,8 +482,7 @@
                            (map cons verts (append (cdr verts) (list (car verts)))))
                          loops))
          (segments (apply append all-lines))
-         (normal (face-normal (car loops)))
-         (fix-offset #f))
+         (normal (face-normal (car loops))))
     (map (lambda (verts lines)
            (let ((offsets
                   (if fix-offset

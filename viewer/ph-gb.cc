@@ -230,6 +230,8 @@ SCM safeLoad(void *data) {
   return SCM_UNSPECIFIED;
 }
 
+static bool load_ok;
+
 SCM errorHandler(void *, SCM key, SCM args) {
   auto display_fun = scm_c_public_ref("guile", "display");
   key = scm_object_to_string(key, display_fun);
@@ -246,6 +248,7 @@ SCM errorHandler(void *, SCM key, SCM args) {
   free(bt_str);
   free(args_str);
   free(key_str);
+  load_ok = false;
   return SCM_UNSPECIFIED;
 }
 
@@ -254,8 +257,12 @@ SCM dummyHandler(void *, SCM, SCM) {
 }
 
 bool PHGB::reload() {
+  load_ok = true;
   scm_c_catch(SCM_BOOL_T, safeLoad, reinterpret_cast<void *>(const_cast<std::string *>(&filename)),
               dummyHandler, nullptr, errorHandler, nullptr);
+  if (!load_ok)
+    return false;
+
   size_t n_vertices, n_faces;
 
   // Extract cage

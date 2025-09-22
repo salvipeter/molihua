@@ -502,7 +502,8 @@
                                   (line-line-intersection (car o2) (car l1)))
                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))
                      (else
-                      (cons (line-line-intersection (car o1) (car o2))
+                      (cons (or (line-line-intersection (car o1) (car o2))
+                                (project-to-line (car o1) (cdar l1)))
                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
          loops all-lines)))
 
@@ -626,6 +627,12 @@
            0)
         (reverse lst)
         lst)))
+
+;;; The line is given as (point1 . point2)
+(define (project-to-line line p)
+  (let ((t (vnormalize (v- (cdr line) (car line)))))
+    (v+ (car line)
+        (v* t (scalar-product t (v- p (car line)))))))
 
 ;;; The plane is given as (point . unit-normal)
 (define (project-to-plane plane p)

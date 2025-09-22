@@ -1,4 +1,4 @@
-(define filename "models/bogre.obj")
+(define filename "models/cube-split.obj")
 
 ;;; Shape parameters
 (define fullness 0.7)

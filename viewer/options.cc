@@ -122,7 +122,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(new QLabel("B-spline reparameterization:"));
   reparamBox = new QDoubleSpinBox();
   reparamBox->setRange(-1.0, 1.0);
-  reparamBox->setValue(0.0);
+  reparamBox->setValue(0.5);
   reparamBox->setSingleStep(0.1);
   geometryLayout->addWidget(reparamBox);
   connect(bsplineConcaveCheck, &QCheckBox::checkStateChanged, 

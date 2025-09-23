@@ -86,9 +86,13 @@ void Window::open(bool clear_others) {
   if (clear_others)
     viewer->deleteObjects();
 
-  if (!viewer->open(filename.toUtf8().data()))
+  if (!viewer->open(filename.toUtf8().data())) {
     QMessageBox::warning(this, tr("Cannot open file"),
                          tr("Could not open file: ") + filename + ".");
+    setWindowTitle(tr("Polyhedral Modeling with CD-GB Patches"));
+  } else
+    setWindowTitle(tr("Polyhedral Modeling with CD-GB Patches [") +
+                   QFileInfo(filename).baseName() + "]");
 }
 
 void Window::setMeanCutoff() {

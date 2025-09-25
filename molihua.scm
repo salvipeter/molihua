@@ -701,9 +701,13 @@
                              (plane-line-intersection (poly->plane (list-ref polys j)) line))
                 (vector-set! offset-vertices (list-ref indices k)
                              (plane-line-intersection (poly->plane (list-ref polys k)) line))))))
-        (shrink-one! 0 1 2)
-        (shrink-one! 1 2 0)
-        (shrink-one! 2 0 1)))))
+        (when (> (abs (* (scalar-product (list-ref normals 0) (list-ref normals 1))
+                         (scalar-product (list-ref normals 1) (list-ref normals 2))
+                         (scalar-product (list-ref normals 2) (list-ref normals 0))))
+                 1e-10)
+          (shrink-one! 0 1 2)
+          (shrink-one! 1 2 0)
+          (shrink-one! 2 0 1))))))
 
 ;;; At vertex j with chamfer c0, find the face connecting to chamfer c1,
 ;;; which is the opposite of face i (i.e., not face i).

@@ -185,6 +185,7 @@ namespace {
 }
 
 void PHGB::updateBaseMesh() {
+  QApplication::setOverrideCursor(Qt::WaitCursor);
   size_t resolution = scm_to_uint(scm_variable_ref(scm_c_lookup("resolution")));
   mesh.clear();
   double large = std::numeric_limits<double>::max();
@@ -221,6 +222,7 @@ void PHGB::updateBaseMesh() {
     mergeMeshes(mesh, patch_mesh, ++id);
   }
   Object::updateBaseMesh(false, false);
+  QApplication::restoreOverrideCursor();
 }
 
 SCM safeLoad(void *data) {

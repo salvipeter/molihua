@@ -3,13 +3,13 @@
 ;;; Shape parameters
 (define fullness 0.7)
 (define shrink-chamfers? #f)
-(define tangent-scale 1)
+(define tangent-scale 4/3)
 (define midvector-scale 1)
 
 ;;; Direction blend options
 ; Possible values:
 ; - none
-; - cubic, cubic-simple, cubic-no-alpha, cubic-tomi-simple
+; - cubic, cubic-simple, cubic-no-alpha, cubic-tomi-simple, cubic-linear
 ; - quartic-simple, quartic-no-alpha, quartic-tomi-simple, quartic-tomi-no-alpha
 ; - quintic, quintic-tomi
 (define direction-blend-type 'cubic-tomi-simple)

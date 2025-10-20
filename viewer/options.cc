@@ -77,7 +77,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
   tanscaleBox->setRange(0.01, 10.0);
-  tanscaleBox->setValue(1.0);
+  tanscaleBox->setValue(1.33);
   tanscaleBox->setSingleStep(0.1);
   tangentScaleChanged(tanscaleBox->value());
   geometryLayout->addWidget(tanscaleBox);
@@ -99,6 +99,7 @@ Options::Options(Viewer *viewer) : viewer(viewer) {
   dblendCombo->addItem("Cubic - simple");
   dblendCombo->addItem("Cubic - no alpha");
   dblendCombo->addItem("CubicTomi - simple");
+  dblendCombo->addItem("Cubic - linear");
   dblendCombo->addItem("Quartic - simple");
   dblendCombo->addItem("Quartic - no alpha");
   dblendCombo->addItem("QuarticTomi - simple");
@@ -195,8 +196,8 @@ void Options::tangentScaleChanged(double scale) {
 }
 
 void Options::dblendChanged(int index) {
-  std::array<std::string, 11> types = {
-    "none", "cubic", "cubic-simple", "cubic-no-alpha", "cubic-tomi-simple",
+  std::array<std::string, 12> types = {
+    "none", "cubic", "cubic-simple", "cubic-no-alpha", "cubic-tomi-simple", "cubic-linear",
     "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple", "quartic-tomi-no-alpha",
     "quintic", "quintic-tomi"
   };

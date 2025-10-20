@@ -61,7 +61,17 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glColor4d(1.0, 0.0, 0.7, 0.3);
-    for (const auto &f : chamfers) {
+    auto n_chamfers = chamfers.size();
+    for (size_t i = 0; i < n_chamfers; ++i) {
+      bool skip = show_only > 0;
+      for (auto vh : cage.fv_range(cage.face_handle(show_only - 1)))
+        if (vh.idx() == (int)i) {
+          skip = false;
+          break;
+        }
+      if (skip)
+        continue;
+      const auto &f = chamfers[i];
       glBegin(GL_POLYGON);
       for (auto v : f)
         glVertex3dv(offset_vertices[v].data());
@@ -71,7 +81,7 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
-  if (vis.show_boundaries) {
+  if (vis.boundaries != Visualization::BoundaryType::NONE) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
     glColor3d(0.0, 0.7, 0.7);
@@ -81,16 +91,22 @@ void PHGB::draw(const Visualization &vis) const {
       const auto &patch = patches[i];
       for (const auto &loop : patch)
         for (const auto &ribbon : loop) {
-          size_t resolution = 100;
           glBegin(GL_LINE_STRIP);
-          for (size_t i = 0; i <= resolution; ++i) {
-            double u = (double)i / resolution;
-            auto tmp = ribbon[0];
-            size_t n = tmp.size() - 1;
-            for (size_t k = 1; k <= n; ++k)
-              for (size_t i = 0; i <= n - k; ++i)
-                tmp[i] = tmp[i] * (1 - u) + tmp[i+1] * u;
-            glVertex3dv(tmp[0].data());
+          if (vis.boundaries == Visualization::BoundaryType::CURVE) {
+            size_t resolution = 100;
+            for (size_t i = 0; i <= resolution; ++i) {
+              double u = (double)i / resolution;
+              auto tmp = ribbon[0];
+              size_t n = tmp.size() - 1;
+              for (size_t k = 1; k <= n; ++k)
+                for (size_t i = 0; i <= n - k; ++i)
+                  tmp[i] = tmp[i] * (1 - u) + tmp[i+1] * u;
+              glVertex3dv(tmp[0].data());
+            }
+          } else {
+            // Just the control points
+            for (const auto &p : ribbon[0])
+              glVertex3dv(p.data());
           }
           glEnd();
         }

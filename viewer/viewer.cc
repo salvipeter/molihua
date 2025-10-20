@@ -295,7 +295,14 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       update();
       break;
     case Qt::Key_D:
-      vis.show_boundaries = !vis.show_boundaries;
+      switch (vis.boundaries) {
+      case Visualization::BoundaryType::NONE:
+        vis.boundaries = Visualization::BoundaryType::CP; break;
+      case Visualization::BoundaryType::CP:
+        vis.boundaries = Visualization::BoundaryType::CURVE; break;
+      case Visualization::BoundaryType::CURVE:
+        vis.boundaries = Visualization::BoundaryType::NONE; break;
+      }
       update();
       break;
     case Qt::Key_B:
@@ -408,7 +415,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;C: Toggle cage visualization</li>"
                "<li>&nbsp;V: Toggle offset visualization</li>"
                "<li>&nbsp;F: Toggle chamfer visualization</li>"
-               "<li>&nbsp;D: Toggle boundary visualization</li>"
+               "<li>&nbsp;D: Toggle boundary visualization (none / CP / curve)</li>"
                "<li>&nbsp;B: Toggle Bézier control polygon visualization</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"

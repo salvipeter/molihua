@@ -64,11 +64,12 @@ void PHGB::draw(const Visualization &vis) const {
     auto n_chamfers = chamfers.size();
     for (size_t i = 0; i < n_chamfers; ++i) {
       bool skip = show_only > 0;
-      for (auto vh : cage.fv_range(cage.face_handle(show_only - 1)))
-        if (vh.idx() == (int)i) {
-          skip = false;
-          break;
-        }
+      if (skip)
+        for (auto vh : cage.fv_range(cage.face_handle(show_only - 1)))
+          if (vh.idx() == (int)i) {
+            skip = false;
+            break;
+          }
       if (skip)
         continue;
       const auto &f = chamfers[i];

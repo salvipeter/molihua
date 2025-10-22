@@ -69,6 +69,9 @@ void Object::draw(const Visualization &vis) const {
   }
 
   if (vis.show_solid && vis.show_wireframe) {
+    glEnable(GL_CULL_FACE);
+    glCullFace(GL_BACK);
+    glDepthFunc(GL_LEQUAL);
     glPolygonMode(GL_FRONT, GL_LINE);
     glColor3d(0.0, 0.0, 0.0);
     glDisable(GL_LIGHTING);
@@ -81,6 +84,8 @@ void Object::draw(const Visualization &vis) const {
       glEnd();
     }
     glEnable(GL_LIGHTING);
+    glDepthFunc(GL_LESS);
+    glDisable(GL_CULL_FACE);
   }
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }

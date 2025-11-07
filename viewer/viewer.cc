@@ -482,3 +482,7 @@ void Viewer::setupCamera() {
 
   update();
 }
+
+std::vector<std::shared_ptr<Object>> Viewer::getObjects() const {
+  return objects;
+}

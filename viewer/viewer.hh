@@ -28,6 +28,7 @@ public:
   void setSlicingScaling(double scaling);
   void deleteObjects();
   bool open(std::string filename);
+  std::vector<std::shared_ptr<Object>> getObjects() const;
 
 public slots:
   void reload();

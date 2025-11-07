@@ -1,6 +1,10 @@
 #pragma once
 
+#include <optional>
+
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
+
+#include <libcdgbs/Mesh.hpp>
 
 #include "object.hh"
 
@@ -14,6 +18,7 @@ public:
   virtual void movement(int selected, const Vector &pos) override;
   virtual void updateBaseMesh() override;
   virtual bool reload() override;
+  std::optional<libcdgbs::Mesh> getDomain(int patch) const;
 private:
   using CageMesh = OpenMesh::PolyMesh_ArrayKernelT<BaseTraits>;
   CageMesh cage;
@@ -25,4 +30,5 @@ private:
   std::vector<Vector> offset_vertices;
   std::vector<std::vector<size_t>> chamfers;
   std::vector<std::vector<std::vector<size_t>>> offset_faces;
+  std::vector<libcdgbs::Mesh> domains;
 };

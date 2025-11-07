@@ -10,7 +10,9 @@
 #include <QSpinBox>
 #include <QVBoxLayout>
 
+#include "domain-window.hh"
 #include "options.hh"
+#include "ph-gb.hh"
 #include "viewer.hh"
 
 bool Options::hsplit() const {
@@ -21,12 +23,13 @@ bool Options::C1() const {
   return C1Check->checkState() == Qt::Checked;
 }
 
-Options *Options::instance(Viewer *viewer) {
-  static Options *instance = new Options(viewer);
+Options *Options::instance(Viewer *viewer, DomainWindow *domain_window) {
+  static Options *instance = new Options(viewer, domain_window);
   return instance;
 }
 
-Options::Options(Viewer *viewer) : viewer(viewer) {
+Options::Options(Viewer *viewer, DomainWindow *domain_window) :
+  viewer(viewer), domain_window(domain_window) {
   auto master = new QVBoxLayout();
 
   auto visual = new QGroupBox("Visualization");
@@ -172,6 +175,7 @@ void Options::onePatchChanged(Qt::CheckState state) {
     selectedBox->setEnabled(false);
     scm_c_define("only-one-patch", SCM_BOOL_F);
     viewer->update();
+    domain_window->setDomain(std::optional<libcdgbs::Mesh>());
   }
 }
 
@@ -183,6 +187,11 @@ void Options::resolutionChanged(int res) {
 void Options::selectedChanged(int selected) {
   scm_c_define("only-one-patch", scm_from_uint(selected));
   viewer->update();
+  const auto &objects = viewer->getObjects();
+  if (!objects.empty()) {
+    const auto &ph = dynamic_cast<PHGB *>(objects.front().get());
+    domain_window->setDomain(ph->getDomain(selected));
+  }
 }
 
 void Options::shrinkChanged(Qt::CheckState state) {

@@ -4,6 +4,7 @@
 
 #include <QtWidgets>
 
+#include "domain-window.hh"
 #include "options.hh"
 #include "window.hh"
 
@@ -33,7 +34,7 @@ Window::Window(QApplication *parent) :
   quitAction->setStatusTip(tr("Quit the program"));
   connect(quitAction, &QAction::triggered, this, &Window::close);
 
-  auto cutoffAction = new QAction(tr("Set mean &cutoff ratio"), this);
+  auto cutoffAction = new QAction(tr("Set &mean cutoff ratio"), this);
   cutoffAction->setStatusTip(tr("Set mean map cutoff ratio"));
   connect(cutoffAction, &QAction::triggered, this, &Window::setMeanCutoff);
 
@@ -45,13 +46,18 @@ Window::Window(QApplication *parent) :
   gcutoffAction->setStatusTip(tr("Set Gaussian map cutoff ratio"));
   connect(gcutoffAction, &QAction::triggered, this, &Window::setGaussCutoff);
 
-  auto grangeAction = new QAction(tr("Set Gaussian &range"), this);
+  auto grangeAction = new QAction(tr("Set &Gaussian range"), this);
   grangeAction->setStatusTip(tr("Set Gaussian map range"));
   connect(grangeAction, &QAction::triggered, this, &Window::setGaussRange);
 
   auto slicingAction = new QAction(tr("Set &slicing parameters"), this);
   slicingAction->setStatusTip(tr("Set contouring direction and scaling"));
   connect(slicingAction, &QAction::triggered, this, &Window::setSlicing);
+
+  domain_window = new DomainWindow(this);
+  auto domainAction = new QAction(tr("Show selected &domain"), this);
+  slicingAction->setStatusTip(tr("Displays the domain (updated only when selection changes!)"));
+  connect(domainAction, &QAction::triggered, domain_window, &DomainWindow::show);
 
   auto fileMenu = menuBar()->addMenu(tr("&File"));
   fileMenu->addAction(openAction);
@@ -63,9 +69,10 @@ Window::Window(QApplication *parent) :
   visMenu->addAction(gcutoffAction);
   visMenu->addAction(grangeAction);
   visMenu->addAction(slicingAction);
+  visMenu->addAction(domainAction);
 
   auto scroll = new QScrollArea();
-  scroll->setWidget(Options::instance(viewer));
+  scroll->setWidget(Options::instance(viewer, domain_window));
 
   auto dock = new QDockWidget("Options", this);
   dock->setAllowedAreas(Qt::LeftDockWidgetArea | Qt::RightDockWidgetArea);
@@ -260,4 +267,8 @@ void Window::midComputation(int percent) {
 void Window::endComputation() {
   progress->hide();
   statusBar()->clearMessage();
+}
+
+DomainWindow *Window::getDomainWindow() const {
+  return domain_window;
 }

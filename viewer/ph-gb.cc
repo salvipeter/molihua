@@ -205,6 +205,7 @@ void PHGB::updateBaseMesh() {
   QApplication::setOverrideCursor(Qt::WaitCursor);
   size_t resolution = scm_to_uint(scm_variable_ref(scm_c_lookup("resolution")));
   mesh.clear();
+  domains.clear();
   double large = std::numeric_limits<double>::max();
   Vector box_min(large, large, large), box_max(-large, -large, -large);
   for (auto v : cage.vertices()) {
@@ -236,6 +237,7 @@ void PHGB::updateBaseMesh() {
                                      Options::instance()->C1());
     else
       surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh, false);
+    domains.push_back(surf.meshDomain);
     mergeMeshes(mesh, patch_mesh, ++id);
   }
   Object::updateBaseMesh(false, false);
@@ -393,4 +395,10 @@ bool PHGB::reload() {
 
   updateBaseMesh();
   return true;
+}
+
+std::optional<libcdgbs::Mesh> PHGB::getDomain(int patch) const {
+  if ((size_t)patch > domains.size())
+    return {};
+  return { domains[patch-1] };
 }

@@ -6,6 +6,7 @@
 
 class QApplication;
 class QProgressBar;
+class DomainWindow;
 
 class Window : public QMainWindow {
   Q_OBJECT
@@ -23,6 +24,7 @@ private slots:
   void startComputation(QString message);
   void midComputation(int percent);
   void endComputation();
+  DomainWindow *getDomainWindow() const;
 
 private:
   void setCutoff(bool mean);
@@ -30,6 +32,7 @@ private:
 
   QApplication *parent;
   Viewer *viewer;
+  DomainWindow *domain_window;
   QProgressBar *progress;
   QString last_directory;
 };

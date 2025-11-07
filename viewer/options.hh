@@ -6,12 +6,13 @@ class QCheckBox;
 class QDoubleSpinBox;
 class QSpinBox;
 class Viewer;
+class DomainWindow;
 
 class Options : public QWidget {
   Q_OBJECT
 
 public:
-  static Options *instance(Viewer *v = nullptr); // Viewer needed only at construction time
+  static Options *instance(Viewer *v = nullptr, DomainWindow *d = nullptr);
   std::optional<double> reparam() const;
   bool hsplit() const;
   bool C1() const;
@@ -31,12 +32,13 @@ public slots:
 
 private:
   // Singleton pattern
-  Options(Viewer *viewer);
+  Options(Viewer *viewer, DomainWindow *domain_window);
   Options(const Options &) = delete;
   Options &operator=(const Options &) = delete;
   Options(Options &) = delete;
   Options &operator=(Options &) = delete;
 
+  DomainWindow *domain_window;
   Viewer *viewer;
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;

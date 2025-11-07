@@ -32,6 +32,7 @@ if(CMAKE_COMPILER_IS_GNUCXX)
 endif(CMAKE_COMPILER_IS_GNUCXX)
 
 set(geo_HEADERS # headers processed by MOC
+  domain-window.hh
   options.hh
   viewer.hh
   window.hh
@@ -66,6 +67,7 @@ include_directories(
 add_executable(viewer WIN32
   ${geo_HEADERS_MOC}
   textures.qrc
+  domain-window.cc
   main.cc
   object.cc
   options.cc

@@ -144,6 +144,15 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   geometryLayout->addWidget(C1Check);
   connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
+  geometryLayout->addWidget(new QLabel("Loop scaling factor:"));
+  scalingBox = new QDoubleSpinBox();
+  scalingBox->setRange(0.5, 1.0);
+  scalingBox->setValue(1.0);
+  scalingBox->setSingleStep(0.1);
+  geometryLayout->addWidget(scalingBox);
+  connect(scalingBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);
+  connect(scalingBox, &QDoubleSpinBox::valueChanged, this, &Options::updateDomain);
+
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);
   auto miscLayout = new QVBoxLayout();
@@ -187,11 +196,7 @@ void Options::resolutionChanged(int res) {
 void Options::selectedChanged(int selected) {
   scm_c_define("only-one-patch", scm_from_uint(selected));
   viewer->update();
-  const auto &objects = viewer->getObjects();
-  if (!objects.empty()) {
-    const auto &ph = dynamic_cast<PHGB *>(objects.front().get());
-    domain_window->setDomain(ph->getDomain(selected));
-  }
+  updateDomain();
 }
 
 void Options::shrinkChanged(Qt::CheckState state) {
@@ -233,6 +238,10 @@ std::optional<double> Options::reparam() const {
   return {};
 }
 
+double Options::scaling() const {
+  return scalingBox->value();
+}
+
 void Options::exportClicked() {
   // Check if selection is valid
   size_t selected = selectedBox->value() - 1;
@@ -251,4 +260,12 @@ void Options::exportClicked() {
   // Export
   scm_c_eval_string(("(write-patch-mgbs (vector-ref ribbons %1) \"" + name + "\")")
                     .arg(selected).toUtf8().data());
+}
+
+void Options::updateDomain() const {
+  const auto &objects = viewer->getObjects();
+  if (!objects.empty()) {
+    const auto &ph = dynamic_cast<PHGB *>(objects.front().get());
+    domain_window->setDomain(ph->getDomain(selectedBox->value()));
+  }
 }

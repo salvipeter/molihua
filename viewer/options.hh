@@ -14,6 +14,7 @@ class Options : public QWidget {
 public:
   static Options *instance(Viewer *v = nullptr, DomainWindow *d = nullptr);
   std::optional<double> reparam() const;
+  double scaling() const;
   bool hsplit() const;
   bool C1() const;
 
@@ -30,6 +31,9 @@ public slots:
   void bsplineConcaveChanged(Qt::CheckState state);
   void exportClicked();
 
+private slots:
+  void updateDomain() const;
+
 private:
   // Singleton pattern
   Options(Viewer *viewer, DomainWindow *domain_window);
@@ -42,6 +46,6 @@ private:
   Viewer *viewer;
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;
-  QDoubleSpinBox *reparamBox;
+  QDoubleSpinBox *reparamBox, *scalingBox;
   QCheckBox *hsplitCheck, *C1Check;
 };

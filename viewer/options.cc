@@ -146,8 +146,8 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
 
   geometryLayout->addWidget(new QLabel("Loop scaling factor:"));
   scalingBox = new QDoubleSpinBox();
-  scalingBox->setRange(0.5, 1.0);
-  scalingBox->setValue(1.0);
+  scalingBox->setRange(0.1, 1.0);
+  scalingBox->setValue(0.7);
   scalingBox->setSingleStep(0.1);
   geometryLayout->addWidget(scalingBox);
   connect(scalingBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);

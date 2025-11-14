@@ -24,6 +24,7 @@ public slots:
   void onePatchChanged(Qt::CheckState state);
   void resolutionChanged(int res);
   void selectedChanged(int selected);
+  void edgeChanged(Qt::CheckState state);
   void shrinkChanged(Qt::CheckState state);
   void tangentScaleChanged(double scale);
   void dblendChanged(int index);

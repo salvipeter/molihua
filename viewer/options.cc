@@ -63,6 +63,11 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   auto geometryLayout = new QVBoxLayout();
   geometry->setLayout(geometryLayout);
 
+  auto edgeCheck = new QCheckBox("Edge-based offsets");
+  geometryLayout->addWidget(edgeCheck);
+  connect(edgeCheck, &QCheckBox::checkStateChanged, this, &Options::edgeChanged);
+  edgeChanged(edgeCheck->checkState());
+
   geometryLayout->addWidget(new QLabel("Fullness:"));
   auto fullBox = new QDoubleSpinBox();
   fullBox->setRange(0.01, 0.99);
@@ -197,6 +202,11 @@ void Options::selectedChanged(int selected) {
   scm_c_define("only-one-patch", scm_from_uint(selected));
   viewer->update();
   updateDomain();
+}
+
+void Options::edgeChanged(Qt::CheckState state) {
+  scm_c_define("edge-based-offsets?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  viewer->reload();
 }
 
 void Options::shrinkChanged(Qt::CheckState state) {

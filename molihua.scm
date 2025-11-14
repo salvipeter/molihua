@@ -1,6 +1,5 @@
 ;;; Private parameters (for debugging/experiments etc.)
 (define fix-offset #f)                  ; offset size or #f
-(define edge-based-offset #t)
 (define sharp-edges '())
 (define sharp-offset 0.01)
 
@@ -578,7 +577,7 @@
 ;;; Returns (verts* . faces*)
 (define (generate-offsets)
   (let ((offset-data (generate-all-offset-lines)))
-    (when edge-based-offset
+    (when edge-based-offsets?
       (take-edge-min-offsets! offset-data))
     (do ((rfaces (make-vector (vector-length faces)))
          (rvertices '())

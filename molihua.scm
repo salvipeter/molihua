@@ -1,9 +1,9 @@
 ;;; Private parameters (for debugging/experiments etc.)
 (define fix-offset #f)                  ; offset size or #f
-(define sharp-edges '())
-(define sharp-offset 0.01)
-(define shrink-inwards? #t)
-(define shrink-outwards? #t)
+(define sharp-edges '())                ; list of indices of the form ((face . loop) . edge)
+(define sharp-offset 0.01)              ; offset distance for "sharp" edges
+(define shrink-inwards? #t)             ; shrink-chamfers moves one corner inwards
+(define shrink-outwards? #t)            ; shrink-chamfers moves two corners outwards
 
 
 ;;; Global variables

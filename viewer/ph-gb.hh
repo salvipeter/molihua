@@ -31,4 +31,5 @@ private:
   std::vector<std::vector<size_t>> chamfers;
   std::vector<std::vector<std::vector<size_t>>> offset_faces;
   std::vector<libcdgbs::Mesh> domains;
+  std::vector<size_t> face_indices;
 };

@@ -64,12 +64,15 @@ void PHGB::draw(const Visualization &vis) const {
     auto n_chamfers = chamfers.size();
     for (size_t i = 0; i < n_chamfers; ++i) {
       bool skip = show_only > 0;
-      if (skip)
-        for (auto vh : cage.fv_range(cage.face_handle(show_only - 1)))
+      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
+        if (face_indices[j] != show_only - 1)
+          continue;
+        for (auto vh : cage.fv_range(cage.face_handle(j)))
           if (vh.idx() == (int)i) {
             skip = false;
             break;
           }
+      }
       if (skip)
         continue;
       const auto &f = chamfers[i];
@@ -290,6 +293,8 @@ bool PHGB::reload() {
 
   // Extract cage
   {
+    cage.clear();
+    face_indices.clear();
     SCM vertices = scm_variable_ref(scm_c_lookup("vertices"));
     SCM faces = scm_variable_ref(scm_c_lookup("faces"));
     n_vertices = scm_to_uint(scm_vector_length(vertices));
@@ -312,6 +317,7 @@ bool PHGB::reload() {
         for (size_t j = 0; j < n; ++j)
           face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
         cage.add_face(face);
+        face_indices.push_back(i);
       }
     }
   }

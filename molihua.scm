@@ -1,5 +1,8 @@
 ;;; Private parameters (for debugging/experiments etc.)
 (define fix-offset #f)                  ; offset size or #f
+(define edge-based-offset #t)
+(define sharp-edges '())
+(define sharp-offset 0.01)
 
 
 ;;; Global variables
@@ -476,6 +479,7 @@
                             (select (cdr candidates) d? (push-line segment v ratio))
                             (select (cdr candidates) d* off*)))))))))))
 
+;;; Returns (normal ((lines . offset-lines) ...))
 ;;; Assumes that the first corner is not concave
 (define (offset-face loops)
   (let* ((all-lines (map (lambda (verts)
@@ -483,15 +487,24 @@
                          loops))
          (segments (apply append all-lines))
          (normal (face-normal (car loops))))
-    (map (lambda (verts lines)
-           (let ((offsets
-                  (if fix-offset
-                      (map (lambda (l)
-                             (constant-offset-line l normal fix-offset))
-                           lines)
-                      (map (lambda (l p n)
-                             (offset-line segments l p n (/ fullness 2) normal))
-                           lines (rotate lines) (append (cdr lines) (list (car lines)))))))
+    (cons normal
+          (map (lambda (lines)
+                 (cons lines
+                       (if fix-offset
+                           (map (lambda (l)
+                                  (constant-offset-line l normal fix-offset))
+                                lines)
+                           (map (lambda (l p n)
+                                  (offset-line segments l p n (/ fullness 2) normal))
+                                lines (rotate lines) (append (cdr lines) (list (car lines)))))))
+               all-lines))))
+
+;;; Intersect the offset lines to create inner polygons
+(define (create-offset-polygon offset-data)
+  (let ((normal (car offset-data)))
+    (map (lambda (pair)
+           (let ((lines (car pair))
+                 (offsets (cdr pair)))
              (let loop ((l1 (rotate lines)) (l2 lines)
                         (o1 (rotate offsets)) (o2 offsets))
                (cond ((null? l1)
@@ -505,39 +518,93 @@
                       (cons (or (line-line-intersection (car o1) (car o2))
                                 (project-to-line (car o1) (cdar l1)))
                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
-         loops all-lines)))
+         (cdr offset-data))))
 
-;;; Returns (verts* . faces*)
-(define (generate-offsets vertices faces)
+(define (generate-all-offset-lines)
   (define (get-points indices)
     (map (lambda (v)
            (vector-ref vertices v))
          indices))
-  (do ((rfaces (make-vector (vector-length faces)))
-       (rvertices '())
-       (index 0)
-       (i 0 (+ i 1)))
-      ((= i (vector-length faces))
-       (cons (list->vector (reverse rvertices)) rfaces))
-    (vector-set! rfaces i
-                 (map (lambda (off)
-                        (let* ((flat (apply append (map (lambda (x)
-                                                          (if (eq? (car x) 'concave)
-                                                              (cdr x)
-                                                              (list x)))
-                                                        off)))
-                               (n (length flat)))
-                          (set! rvertices (append (reverse flat) rvertices))
-                          (set! index (+ index n))
-                          (let loop ((lst off) (i (- index n)))
-                            (cond ((null? lst)
-                                   '())
-                                  ((eq? (caar lst) 'concave)
-                                   (cons (cons i (+ i 1))
-                                         (loop (cdr lst) (+ i 2))))
-                                  (else
-                                   (cons i (loop (cdr lst) (+ i 1))))))))
-                      (offset-face (map get-points (vector-ref faces i)))))))
+  (let ((result (make-vector (vector-length faces))))
+    (do ((i 0 (+ i 1)))
+        ((= i (vector-length faces))
+         result)
+      (vector-set! result i
+                   (offset-face (map get-points (vector-ref faces i)))))))
+
+;;; The lines `base` and `line` are both given as (point1 . point2).
+(define (push-line-to-distance base line d)
+  (let ((old-d (line-point-distance base (car line))))
+    (push-line base (car line) (/ d old-d))))
+
+;;; Finds all edges and takes the closest of the two offset distances
+;;; For edges in `sharp-edges` set the offset to `sharp-offset`
+(define (take-edge-min-offsets! offset-data)
+  (define (line index)
+    (list-ref (car (list-ref (cdr (vector-ref offset-data (caar index)))
+                             (cdar index)))
+              (cdr index)))
+  (define (offset index)
+    (list-ref (cdr (list-ref (cdr (vector-ref offset-data (caar index)))
+                             (cdar index)))
+              (cdr index)))
+  (define (set-offset! index value)
+    (set-car! (list-tail (cdr (list-ref (cdr (vector-ref offset-data (caar index)))
+                                        (cdar index)))
+                         (cdr index))
+              value))
+  (do ((i 0 (+ i 1)))
+      ((= i (vector-length faces)))
+    (let ((face (vector-ref faces i)))
+      (do ((j 0 (+ j 1)))
+          ((= j (length face)))
+        (let ((loop (list-ref face j)))
+          (do ((k 0 (+ k 1)))
+              ((= k (length loop)))
+            (let* ((edge (list-ref loop k))
+                   (index1 (cons (cons i j) k))
+                   (index2 (opposite-side (cons i j) k))
+                   (l (line index1))
+                   (l1 (offset index1))
+                   (l2 (offset index2))
+                   (d1 (line-point-distance l (car l1)))
+                   (d2 (line-point-distance l (car l2))))
+              (cond ((or (member index2 sharp-edges)
+                         (member index1 sharp-edges))
+                     (set-offset! index1 (push-line-to-distance l l1 sharp-offset)))
+                    ((< d2 d1)
+                     (set-offset! index1 (push-line-to-distance l l1 d2)))))))))))
+
+;;; Returns (verts* . faces*)
+(define (generate-offsets)
+  (let ((offset-data (generate-all-offset-lines)))
+    (when edge-based-offset
+      (take-edge-min-offsets! offset-data))
+    (do ((rfaces (make-vector (vector-length faces)))
+         (rvertices '())
+         (index 0)
+         (i 0 (+ i 1)))
+        ((= i (vector-length faces))
+         (cons (list->vector (reverse rvertices)) rfaces))
+      (vector-set! rfaces i
+                   (map (lambda (off)
+                          (let* ((flat (apply append (map (lambda (x)
+                                                            (if (eq? (car x) 'concave)
+                                                                (cdr x)
+                                                                (list x)))
+                                                          off)))
+                                 (n (length flat)))
+                            (set! rvertices (append (reverse flat) rvertices))
+                            (set! index (+ index n))
+                            (let loop ((lst off) (i (- index n)))
+                              (cond ((null? lst)
+                                     '())
+                                    ((eq? (caar lst) 'concave)
+                                     (cons (cons i (+ i 1))
+                                           (loop (cdr lst) (+ i 2))))
+                                    (else
+                                     (cons i (loop (cdr lst) (+ i 1))))))))
+                        (create-offset-polygon (vector-ref offset-data i)))))))
 
 (define (update-topology)
   (set! vertex-faces
@@ -559,7 +626,7 @@
                   (car lst))))))
 
 (define (update-offsets)
-  (let ((offsets (generate-offsets vertices faces)))
+  (let ((offsets (generate-offsets)))
     (set! offset-vertices (car offsets))
     (set! offset-faces (cdr offsets))))
 

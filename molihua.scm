@@ -2,6 +2,8 @@
 (define fix-offset #f)                  ; offset size or #f
 (define sharp-edges '())
 (define sharp-offset 0.01)
+(define shrink-inwards? #t)
+(define shrink-outwards? #t)
 
 
 ;;; Global variables
@@ -764,10 +766,12 @@
                      (qj (plane-line-intersection (poly->plane (list-ref polys j)) line))
                      (qk (plane-line-intersection (poly->plane (list-ref polys k)) line)))
                 (when (and qj qk)
-                  (vector-set! offset-vertices (list-ref indices i) ; kutykurutty
-                               (v+ pk* (v* t (scalar-product t (v- pi pk*)))))
-                  (vector-set! offset-vertices (list-ref indices j) qj)
-                  (vector-set! offset-vertices (list-ref indices k) qk))))))
+                  (when shrink-inwards?
+                    (vector-set! offset-vertices (list-ref indices i)
+                                 (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                  (when shrink-outwards?
+                    (vector-set! offset-vertices (list-ref indices j) qj)
+                    (vector-set! offset-vertices (list-ref indices k) qk)))))))
         (define (not-parallel? i j)
           (> (vlength (cross-product (list-ref normals i) (list-ref normals j))) 1e-5))
         (when (and (not-parallel? 0 1) (not-parallel? 1 2) (not-parallel? 2 0))

@@ -23,6 +23,10 @@ bool Options::C1() const {
   return C1Check->checkState() == Qt::Checked;
 }
 
+bool Options::biharmonic() const {
+  return biharmonicCheck->checkState() == Qt::Checked;
+}
+
 Options *Options::instance(Viewer *viewer, DomainWindow *domain_window) {
   static Options *instance = new Options(viewer, domain_window);
   return instance;
@@ -166,6 +170,11 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   geometryLayout->addWidget(scalingBox);
   connect(scalingBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);
   connect(scalingBox, &QDoubleSpinBox::valueChanged, this, &Options::updateDomain);
+
+  biharmonicCheck = new QCheckBox("Biharmonic surfaces");
+  biharmonicCheck->setChecked(false);
+  geometryLayout->addWidget(biharmonicCheck);
+  connect(biharmonicCheck, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   auto misc = new QGroupBox("Miscellaneous");
   master->addWidget(misc);

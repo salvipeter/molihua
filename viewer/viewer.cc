@@ -313,6 +313,10 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       vis.show_solid = !vis.show_solid;
       update();
       break;
+    case Qt::Key_K:
+      vis.show_misc_lines = !vis.show_misc_lines;
+      update();
+      break;
     case Qt::Key_W:
       vis.show_wireframe = !vis.show_wireframe;
       update();
@@ -419,6 +423,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;B: Toggle Bézier control polygon visualization</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"
+               "<li>&nbsp;K: Toggle miscellaneous lines</li>"
                "<li>&nbsp;X/Y/Z: Set standard view direction</li>"
                "<li>&nbsp;?: This help</li>"
                "</ul>"

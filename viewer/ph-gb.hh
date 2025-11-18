@@ -32,4 +32,5 @@ private:
   std::vector<std::vector<std::vector<size_t>>> offset_faces;
   std::vector<libcdgbs::Mesh> domains;
   std::vector<size_t> face_indices;
+  std::vector<std::pair<Vector, Vector>> misc_lines;
 };

@@ -17,6 +17,7 @@
 (define ribbons #f)                     ; vector of ribbons corresponding to the faces;
                                         ;   ((loop1-edge1 loop1-edge2 ...) (loop2-edge1 ...) ...)
                                         ;   note: edge1 is between the first two vertices etc.
+(define misc-lines '())                 ; list of line segments to draw (for experimenting)
 
 
 ;;; R7RS compatibility
@@ -111,6 +112,14 @@
     (cond ((null? lst) #f)
           ((eq? (car lst) elt) i)
           (else (loop (+ i 1) (cdr lst))))))
+
+(define (find-index-containing elt vec-of-lst)
+  (call/cc
+   (lambda (return)
+     (do ((i 0 (1+ i)))
+         ((= i (vector-length vec-of-lst)) #f)
+       (when (member elt (vector-ref vec-of-lst i))
+         (return i))))))
 
 (define (common-element a b)
   (let loop ((a a))
@@ -378,6 +387,23 @@
           (let ((s (/ (- (* b e) (* c d)) denom))
                 (t (/ (- (* a e) (* b d)) denom)))
             (v* (v+ ap (v* ad s) bp (v* bd t)) 0.5))))))
+
+;;; Closest point of `l1` to `l2`
+(define (line-line-closest-point l1 l2)
+  (let* ((ap (car l1))
+         (ad (v- (cdr l1) (car l1)))
+         (bp (car l2))
+         (bd (v- (cdr l2) (car l2)))
+         (a (scalar-product ad ad))
+         (b (scalar-product ad bd))
+         (c (scalar-product bd bd))
+         (d (scalar-product ad (v- ap bp)))
+         (e (scalar-product bd (v- ap bp))))
+    (let ((denom (- (* a c) (* b b))))
+      (if (< denom 1e-5)
+          ap                            ; kutykurutty
+          (let ((s (/ (- (* b e) (* c d)) denom)))
+            (v+ ap (v* ad s)))))))
 
 ;;; As a special case it checks the endpoints and the defining points of the line explicitly.
 ;;; Always returns a point on the segment (or #f)
@@ -1141,6 +1167,62 @@
                                    (range 0 (length loop)))))
                           (range 0 (length loops))))))))
 
+(define (common-edge poly1 poly2)
+  (define (find-first-tail ps)
+    (if (member (car ps) poly2)
+        ps
+        (find-first-tail (cdr ps))))
+  (let ((tail (find-first-tail poly1)))
+    (cons (car tail)
+          (car (find-first-tail (cdr tail))))))
+
+(define (draw-lines)
+  (do ((v 0 (1+ v)))
+      ((= v (vector-length vertices)))
+    (let* ((indices (chamfer v))
+           (n (length indices))
+           (fc (flatten-pairs indices))
+           (m (v* (apply v+ (map (lambda (v)
+                                   (vector-ref offset-vertices v))
+                                 fc))
+                  (/ (length fc)))))
+      (when (and (= n 3) ; cannot handle vertices of degree != 3 (kutykurutty)
+                 (let check ((lst indices)) ; check if no concave corner is present (kutykurutty)
+                   (or (null? lst)
+                       (and (not (pair? (car lst)))
+                            (check (cdr lst))))))
+        (let* ((corner (vector-ref vertices v))
+               (points (map (lambda (i)
+                              (vector-ref offset-vertices i))
+                            indices))
+               (face-indices (vector-ref vertex-faces v))
+               (polys (map (lambda (i)
+                             (let find ((lst face-indices))
+                               (if (memq i (nested-ref offset-faces (car lst)))
+                                   (map (lambda (j)
+                                          (vector-ref vertices j))
+                                        (nested-ref faces (car lst)))
+                                   (find (cdr lst)))))
+                           indices))
+               (edges (let loop ((i 0))
+                        (if (= i n)
+                            '()
+                            (let ((j (modulo (+ i 1) n)))
+                              (cons (common-edge (list-ref polys i)
+                                                 (list-ref polys j))
+                                    (loop (+ i 1))))))))
+          (let loop ((i 0))
+            (when (< i n)
+              (let* ((j (modulo (+ i 1) n))
+                     (e (list-ref edges i))
+                     (e1 (cons m (v+ m (v- (cdr e) (car e)))))
+                     (p1 (list-ref points i))
+                     (p2 (list-ref points j)))
+                (set! misc-lines
+                  (cons (cons m (line-line-closest-point (cons p1 p2) e1))
+                        misc-lines))
+                (loop (+ i 1))))))))))
+
 
 ;;; Main function
 
@@ -1152,4 +1234,5 @@
   (update-offsets)
   (when (or shrink-inwards? shrink-outwards?)
     (for-each shrink-chamfer! (range 0 (vector-length vertices))))
+  (draw-lines)
   (update-ribbons))

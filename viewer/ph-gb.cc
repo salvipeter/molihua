@@ -147,6 +147,22 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
+  if (vis.show_misc_lines) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(3.0);
+    glColor3d(0.0, 0.0, 0.0);
+
+    glBegin(GL_LINES);
+    for (const auto &[p, q] : misc_lines) {
+      glVertex3dv(p.data());
+      glVertex3dv(q.data());
+    }
+    glEnd();
+
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
+  }
+
 }
 
 void PHGB::drawWithNames(const Visualization &vis) const {
@@ -398,6 +414,23 @@ bool PHGB::reload() {
           chamfers[i].push_back(scm_to_uint(index));
         chamfer = scm_cdr(chamfer);
       }
+    }
+  }
+
+  // Extract misc lines
+  {
+    misc_lines.clear();
+    SCM misc = scm_variable_ref(scm_c_lookup("misc-lines"));
+    while (scm_null_p(misc) == SCM_BOOL_F) {
+      SCM segment = scm_car(misc);
+      SCM sp = scm_car(segment), sq = scm_cdr(segment);
+      Vector p, q;
+      for (size_t c = 0; c < 3; ++c) {
+        p[c] = scm_to_double(scm_list_ref(sp, scm_from_uint(c)));
+        q[c] = scm_to_double(scm_list_ref(sq, scm_from_uint(c)));
+      }
+      misc_lines.push_back({p, q});
+      misc = scm_cdr(misc);
     }
   }
 

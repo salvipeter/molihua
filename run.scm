@@ -3,7 +3,8 @@
 ;;; Shape parameters
 (define fullness 0.7)
 (define edge-based-offsets? #f)
-(define shrink-chamfers? #f)
+(define shrink-inwards? #t)
+(define shrink-outwards? #t)
 (define tangent-scale 4/3)
 (define midvector-scale 1)
 

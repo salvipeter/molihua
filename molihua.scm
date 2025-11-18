@@ -2,8 +2,7 @@
 (define fix-offset #f)                  ; offset size or #f
 (define sharp-edges '())                ; list of indices of the form ((face . loop) . edge)
 (define sharp-offset 0.01)              ; offset distance for "sharp" edges
-(define shrink-inwards? #t)             ; shrink-chamfers moves one corner inwards
-(define shrink-outwards? #t)            ; shrink-chamfers moves two corners outwards
+(define shrink-inwards-scaling 1)       ; extra scaling of inwards shrink
 
 
 ;;; Global variables
@@ -767,8 +766,9 @@
                      (qk (plane-line-intersection (poly->plane (list-ref polys k)) line)))
                 (when (and qj qk)
                   (when shrink-inwards?
-                    (vector-set! offset-vertices (list-ref indices i)
-                                 (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                    (let ((pi* (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                      (vector-set! offset-vertices (list-ref indices i)
+                                   (v+ pi (v* (v- pi* pi) shrink-inwards-scaling)))))
                   (when shrink-outwards?
                     (vector-set! offset-vertices (list-ref indices j) qj)
                     (vector-set! offset-vertices (list-ref indices k) qk)))))))
@@ -1150,6 +1150,6 @@
     (set! faces (cadr model)))
   (update-topology)
   (update-offsets)
-  (when shrink-chamfers?
+  (when (or shrink-inwards? shrink-outwards?)
     (for-each shrink-chamfer! (range 0 (vector-length vertices))))
   (update-ribbons))

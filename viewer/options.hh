@@ -25,7 +25,7 @@ public slots:
   void resolutionChanged(int res);
   void selectedChanged(int selected);
   void edgeChanged(Qt::CheckState state);
-  void shrinkChanged(Qt::CheckState state);
+  void shrinkChanged(Qt::CheckState state, bool inwards);
   void tangentScaleChanged(double scale);
   void dblendChanged(int index);
   void quinticCubicChanged(Qt::CheckState state);

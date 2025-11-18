@@ -77,10 +77,19 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   geometryLayout->addWidget(fullBox);
   connect(fullBox, &QDoubleSpinBox::valueChanged, this, &Options::fullnessChanged);
 
-  auto shrinkCheck = new QCheckBox("Shrink chamfers");
+  auto shrinkCheck = new QCheckBox("Shrink inwards");
+  shrinkCheck->setChecked(true);
   geometryLayout->addWidget(shrinkCheck);
-  connect(shrinkCheck, &QCheckBox::checkStateChanged, this, &Options::shrinkChanged);
-  shrinkChanged(shrinkCheck->checkState());
+  connect(shrinkCheck, &QCheckBox::checkStateChanged,
+          [this](Qt::CheckState state) { shrinkChanged(state, true); });
+  shrinkChanged(shrinkCheck->checkState(), true);
+
+  auto shrinkCheck2 = new QCheckBox("Shrink outwards");
+  shrinkCheck2->setChecked(true);
+  geometryLayout->addWidget(shrinkCheck2);
+  connect(shrinkCheck2, &QCheckBox::checkStateChanged,
+          [this](Qt::CheckState state) { shrinkChanged(state, false); });
+  shrinkChanged(shrinkCheck2->checkState(), false);
 
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
@@ -209,8 +218,11 @@ void Options::edgeChanged(Qt::CheckState state) {
   viewer->reload();
 }
 
-void Options::shrinkChanged(Qt::CheckState state) {
-  scm_c_define("shrink-chamfers?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+void Options::shrinkChanged(Qt::CheckState state, bool inwards) {
+  if (inwards)
+    scm_c_define("shrink-inwards?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  else
+    scm_c_define("shrink-outwards?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
   viewer->reload();
 }
 

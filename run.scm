@@ -1,4 +1,4 @@
-(define filename "models/cube-split.obj")
+(define filename "models/elretoltkocka.obj")
 
 ;;; Shape parameters
 (define fullness 0.7)
@@ -28,6 +28,7 @@
 (write-offsets "/tmp/offsets.obj")
 (write-chamfers "/tmp/chamfers.obj")
 (write-controls "/tmp/controls.obj")
+(write-polyhedron "/tmp/polyhedron.obj")
 (write-patches-mgbs "/tmp/patch-")
 
 

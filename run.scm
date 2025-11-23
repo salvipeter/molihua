@@ -5,7 +5,7 @@
 (define edge-based-offsets? #f)
 (define shrink-inwards? #t)
 (define shrink-outwards? #t)
-(define tangent-scale 4/3)
+(define tangent-scale 1)
 (define midvector-scale 1)
 
 ;;; Direction blend options

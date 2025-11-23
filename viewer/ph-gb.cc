@@ -122,7 +122,7 @@ void PHGB::draw(const Visualization &vis) const {
   if (vis.show_control_points) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
-    glColor3d(0.0, 1.0, 0.0);
+    glColor3d(0.3, 0.3, 0.3);
     for (size_t i = 0; i < patches.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
         continue;

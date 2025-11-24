@@ -3,6 +3,7 @@
 (define sharp-edges '())                ; list of indices of the form ((face . loop) . edge)
 (define sharp-offset 0.01)              ; offset distance for "sharp" edges
 (define shrink-inwards-scaling 1)       ; extra scaling of inwards shrink
+(define cross-tangent-scaling? #f)      ; does tangent scaling affect ribbon width?
 
 
 ;;; Global variables
@@ -952,7 +953,7 @@
          (scaled-offset (lambda (c f i)
                           (let ((i (select-from-pair f i)))
                             (v+ c (v* (v- (vector-ref offset-vertices i) c)
-                                            tangent-scale)))))
+                                      tangent-scale)))))
          (o0 (scaled-offset m0 cdr (list-ref offset-face j)))
          (o1 (scaled-offset m1 car (list-ref offset-face j+1)))
          ;; the opposite face includes a vertex index from both c0 and c1
@@ -970,7 +971,12 @@
                             (scaled-offset m1 car (common-element c1 opp+1))))
                  1/2)))
     (cons (list m0 e0 e1 m1)
-          (list f0 o0 o1 f1))))
+          (if cross-tangent-scaling?
+              (list f0 o0 o1 f1)
+              (list (v+ m0 (v* (v- f0 m0) (/ tangent-scale)))
+                    (v+ e0 (v* (v- o0 e0) (/ tangent-scale)))
+                    (v+ e1 (v* (v- o1 e1) (/ tangent-scale)))
+                    (v+ m1 (v* (v- f1 m1) (/ tangent-scale))))))))
 
 ;;; Computes a variation of r1 matching the mean cross-derivative with r2
 (define (direction-blend r1 r2)

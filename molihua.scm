@@ -856,7 +856,7 @@
             (let ((index (list-ref loop k)))
               (when (and (number? index) (= index v))
                 (set-offset i j k)
-                (set-offset i j (modulo (+ k 1) (length loop)))))))))))
+                (set-offset i j (modulo (+ k (length loop) -1) (length loop)))))))))))
 
 (define (shrink-chamfer! v)
   (let ((indices (chamfer v)))

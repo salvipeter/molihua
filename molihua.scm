@@ -12,6 +12,9 @@
 (define offset-vertices #f)             ; vector of all offset vertices
 (define offset-faces #f)                ; vector of all offset faces, similarly to `faces`,
                                         ;   but with indices to `offset-vertices`
+(define offset-data #f)                 ; vector containing (normal ((lines . offset-lines) ...))
+                                        ;   for each face of the model
+(define offset-data-original #f)        ; same, retaining the original values (no shrink etc.)
 (define vertex-faces #f)                ; vector containing adjacent face indices for vertex i;
                                         ;   an index is a cons cell (face-index . loop-index)
 (define ribbons #f)                     ; vector of ribbons corresponding to the faces;
@@ -583,8 +586,8 @@
                all-lines))))
 
 ;;; Intersect the offset lines to create inner polygons
-(define (create-offset-polygon offset-data)
-  (let ((normal (car offset-data)))
+(define (create-offset-polygon offset-face-data)
+  (let ((normal (car offset-face-data)))
     (map (lambda (pair)
            (let ((lines (car pair))
                  (offsets (cdr pair)))
@@ -601,7 +604,7 @@
                       (cons (or (line-line-intersection (car o1) (car o2))
                                 (project-to-line (car o1) (cdar l1)))
                             (loop (cdr l1) (cdr l2) (cdr o1) (cdr o2))))))))
-         (cdr offset-data))))
+         (cdr offset-face-data))))
 
 (define (generate-all-offset-lines)
   (define (get-points indices)
@@ -622,7 +625,8 @@
 
 ;;; Finds all edges and takes the closest of the two offset distances
 ;;; For edges in `sharp-edges` set the offset to `sharp-offset`
-(define (take-edge-min-offsets! offset-data)
+;;; Works directly on `offset-data`
+(define (take-edge-min-offsets!)
   (define (line index)
     (list-ref (car (list-ref (cdr (vector-ref offset-data (caar index)))
                              (cdar index)))
@@ -662,34 +666,31 @@
 
 ;;; Returns (verts* . faces*)
 (define (generate-offsets)
-  (let ((offset-data (generate-all-offset-lines)))
-    (when edge-based-offsets?
-      (take-edge-min-offsets! offset-data))
-    (do ((rfaces (make-vector (vector-length faces)))
-         (rvertices '())
-         (index 0)
-         (i 0 (+ i 1)))
-        ((= i (vector-length faces))
-         (cons (list->vector (reverse rvertices)) rfaces))
-      (vector-set! rfaces i
-                   (map (lambda (off)
-                          (let* ((flat (apply append (map (lambda (x)
-                                                            (if (eq? (car x) 'concave)
-                                                                (cdr x)
-                                                                (list x)))
-                                                          off)))
-                                 (n (length flat)))
-                            (set! rvertices (append (reverse flat) rvertices))
-                            (set! index (+ index n))
-                            (let loop ((lst off) (i (- index n)))
-                              (cond ((null? lst)
-                                     '())
-                                    ((eq? (caar lst) 'concave)
-                                     (cons (cons i (+ i 1))
-                                           (loop (cdr lst) (+ i 2))))
-                                    (else
-                                     (cons i (loop (cdr lst) (+ i 1))))))))
-                        (create-offset-polygon (vector-ref offset-data i)))))))
+  (do ((rfaces (make-vector (vector-length faces)))
+       (rvertices '())
+       (index 0)
+       (i 0 (+ i 1)))
+      ((= i (vector-length faces))
+       (cons (list->vector (reverse rvertices)) rfaces))
+    (vector-set! rfaces i
+                 (map (lambda (off)
+                        (let* ((flat (apply append (map (lambda (x)
+                                                          (if (eq? (car x) 'concave)
+                                                              (cdr x)
+                                                              (list x)))
+                                                        off)))
+                               (n (length flat)))
+                          (set! rvertices (append (reverse flat) rvertices))
+                          (set! index (+ index n))
+                          (let loop ((lst off) (i (- index n)))
+                            (cond ((null? lst)
+                                   '())
+                                  ((eq? (caar lst) 'concave)
+                                   (cons (cons i (+ i 1))
+                                         (loop (cdr lst) (+ i 2))))
+                                  (else
+                                   (cons i (loop (cdr lst) (+ i 1))))))))
+                      (create-offset-polygon (vector-ref offset-data i))))))
 
 (define (update-topology)
   (set! vertex-faces
@@ -710,7 +711,30 @@
                                  (cons (cons i j) (vector-ref result v))))
                   (car lst))))))
 
+(define (clone-offset-data)
+  (define (deep-copy lst)
+    (cond
+     ((null? lst) '())
+     ((pair? lst)
+      (cons (deep-copy (car lst))
+            (deep-copy (cdr lst))))
+     (else lst)))
+  (let ((v (make-vector (vector-length offset-data))))
+    (for-each (lambda (i)
+                (vector-set! v i (deep-copy (vector-ref offset-data i))))
+              (range 0 (vector-length offset-data)))
+    v))
+
 (define (update-offsets)
+  (set! offset-data (generate-all-offset-lines))
+  (set! offset-data-original (clone-offset-data))
+  (when edge-based-offsets?
+      (take-edge-min-offsets!))
+  (let ((offsets (generate-offsets)))
+    (set! offset-vertices (car offsets))
+    (set! offset-faces (cdr offsets)))
+  (when (or shrink-inwards? shrink-outwards?)
+    (for-each shrink-chamfer! (range 0 (vector-length vertices))))
   (let ((offsets (generate-offsets)))
     (set! offset-vertices (car offsets))
     (set! offset-faces (cdr offsets))))
@@ -809,6 +833,31 @@
                                      (cdr plane))
                      denom))))))
 
+;;; Updates `offset-data` such that the offset vertex `v` is repositioned to `p`
+;;; Does not let the distance become negative or larger than the original * 0.9 / fullness
+(define (set-offset-line-by-vertex! v p)
+  (define (set-offset i j k)
+    (let* ((lo (list-ref (cdr (vector-ref offset-data i)) j))
+           (line (list-ref (car lo) k))
+           (offset (list-ref (cdr lo) k))
+           (original (list-ref (cdr (list-ref (cdr (vector-ref offset-data-original i)) j)) k))
+           (dmax (* (line-point-distance line (car original)) (/ 0.9 fullness)))
+           (d (min (line-point-distance line p) dmax))
+           (line-new (push-line-to-distance line original d)))
+      (set-car! (list-tail (cdr lo) k) line-new)))
+  (do ((i 0 (+ i 1)))
+      ((= i (vector-length offset-faces)))
+    (let ((face (vector-ref offset-faces i)))
+      (do ((j 0 (+ j 1)))
+          ((= j (length face)))
+        (let ((loop (list-ref face j)))
+          (do ((k 0 (+ k 1)))
+              ((= k (length loop)))
+            (let ((index (list-ref loop k)))
+              (when (and (number? index) (= index v))
+                (set-offset i j k)
+                (set-offset i j (modulo (+ k 1) (length loop)))))))))))
+
 (define (shrink-chamfer! v)
   (let ((indices (chamfer v)))
     (when (and (= (length indices) 3)     ; cannot handle vertices of degree != 3 (kutykurutty)
@@ -849,14 +898,13 @@
                      (line (cons (v+ pj d) (v+ pk d)))
                      (qj (plane-line-intersection (poly->plane (list-ref polys j)) line))
                      (qk (plane-line-intersection (poly->plane (list-ref polys k)) line)))
-                (when (and qj qk)
-                  (when shrink-inwards?
-                    (let ((pi* (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
-                      (vector-set! offset-vertices (list-ref indices i)
-                                   (v+ pi (v* (v- pi* pi) shrink-inwards-scaling)))))
-                  (when shrink-outwards?
-                    (vector-set! offset-vertices (list-ref indices j) qj)
-                    (vector-set! offset-vertices (list-ref indices k) qk)))))))
+                (when shrink-inwards?
+                  (let ((pi* (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                    (set-offset-line-by-vertex! (list-ref indices i)
+                                                (v+ pi (v* (v- pi* pi) shrink-inwards-scaling)))))
+                (when (and qj qk shrink-outwards?)
+                  (set-offset-line-by-vertex! (list-ref indices j) qj)
+                  (set-offset-line-by-vertex! (list-ref indices k) qk))))))
         (define (not-parallel? i j)
           (> (vlength (cross-product (list-ref normals i) (list-ref normals j))) 1e-5))
         (when (and (not-parallel? 0 1) (not-parallel? 1 2) (not-parallel? 2 0))
@@ -1271,7 +1319,5 @@
     (set! faces (cadr model)))
   (update-topology)
   (update-offsets)
-  (when (or shrink-inwards? shrink-outwards?)
-    (for-each shrink-chamfer! (range 0 (vector-length vertices))))
   (draw-lines)
   (update-ribbons))

@@ -2,6 +2,7 @@
 .\#*
 *.stl
 *.ply
+jet-build
 build
 debug
 release

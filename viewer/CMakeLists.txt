@@ -102,4 +102,5 @@ target_link_libraries(viewer PUBLIC
   ${CDGBS_LIBRARY}
   ${Triangle_LIBRARY}
   ${GUILE_LIBRARIES}
+  gmp
   )

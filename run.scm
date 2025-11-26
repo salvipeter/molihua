@@ -11,7 +11,7 @@
 ;;; Direction blend options
 ; Possible values:
 ; - none
-; - cubic, cubic-simple, cubic-no-alpha, cubic-tomi-simple, cubic-linear
+; - cubic, cubic-simple, cubic-no-alpha, cubic-tomi-simple, cubic-peti-simple, cubic-linear
 ; - quartic-simple, quartic-no-alpha, quartic-tomi-simple, quartic-tomi-no-alpha
 ; - quintic, quintic-tomi
 (define direction-blend-type 'cubic-tomi-simple)

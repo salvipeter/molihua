@@ -120,6 +120,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   dblendCombo->addItem("Cubic - simple");
   dblendCombo->addItem("Cubic - no alpha");
   dblendCombo->addItem("CubicTomi - simple");
+  dblendCombo->addItem("CubicPeti - simple");
   dblendCombo->addItem("Cubic - linear");
   dblendCombo->addItem("Quartic - simple");
   dblendCombo->addItem("Quartic - no alpha");
@@ -127,7 +128,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   dblendCombo->addItem("QuarticTomi - no alpha");
   dblendCombo->addItem("Quintic");
   dblendCombo->addItem("QuinticTomi");
-  dblendCombo->setCurrentIndex(4);
+  dblendCombo->setCurrentIndex(5);
   geometryLayout->addWidget(dblendCombo);
   connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
   dblendChanged(dblendCombo->currentIndex());
@@ -158,7 +159,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   connect(hsplitCheck, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   C1Check = new QCheckBox("C1 ribbon merge");
-  C1Check->setChecked(false);
+  C1Check->setChecked(true);
   geometryLayout->addWidget(C1Check);
   connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
@@ -241,10 +242,10 @@ void Options::tangentScaleChanged(double scale) {
 }
 
 void Options::dblendChanged(int index) {
-  std::array<std::string, 12> types = {
-    "none", "cubic", "cubic-simple", "cubic-no-alpha", "cubic-tomi-simple", "cubic-linear",
-    "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple", "quartic-tomi-no-alpha",
-    "quintic", "quintic-tomi"
+  std::array<std::string, 13> types = {
+    "none", "cubic", "cubic-simple", "cubic-no-alpha", "cubic-tomi-simple", "cubic-peti-simple",
+    "cubic-linear", "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple",
+    "quartic-tomi-no-alpha", "quintic", "quintic-tomi"
   };
   scm_c_define("direction-blend-type", scm_from_utf8_symbol(types[index].c_str()));
   viewer->reload();

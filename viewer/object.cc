@@ -22,6 +22,11 @@ void Object::draw(const Visualization &vis) const {
   if (onePatch != SCM_BOOL_F)
     show_only = scm_to_uint(onePatch);
 
+  GLfloat mat_specular[] = { 0.52f, 0.52f, 0.52f, 1.0f };
+  GLfloat mat_shininess  = 84.0f;
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, mat_specular);
+  glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+
   glPolygonMode(GL_FRONT_AND_BACK,
                 !vis.show_solid && vis.show_wireframe ? GL_LINE : GL_FILL);
   glEnable(GL_POLYGON_OFFSET_FILL);
@@ -29,7 +34,7 @@ void Object::draw(const Visualization &vis) const {
 
   if (vis.show_solid || vis.show_wireframe) {
     if (vis.type == VisType::PLAIN)
-      glColor3d(1.0, 1.0, 1.0);
+      glColor3d(0.745, 0.784, 0.824); // muted blue-gray (recommended by ChatGPT...)
     else if (vis.type == VisType::ISOPHOTES) {
       glBindTexture(GL_TEXTURE_2D, vis.current_isophote_texture);
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);

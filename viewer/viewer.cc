@@ -127,6 +127,31 @@ void Viewer::reload() {
 
 void Viewer::init() {
   glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, 1);
+  glEnable(GL_LIGHT0);
+
+  // Light parameters (directional white-ish, slightly cool)
+  GLfloat light_pos[]     = { 1.0f, 1.0f, 2.0f, 0.0f }; // w=0 => directional
+  GLfloat light_diffuse[] = { 0.95f, 0.98f, 1.00f, 1.0f };
+  GLfloat light_specular[]= { 1.0f,  1.0f,  1.0f,  1.0f };
+  GLfloat light_ambient[] = { 0.12f, 0.12f, 0.12f, 1.0f };
+
+  glLightfv(GL_LIGHT0, GL_POSITION,  light_pos);
+  glLightfv(GL_LIGHT0, GL_DIFFUSE,   light_diffuse);
+  glLightfv(GL_LIGHT0, GL_SPECULAR,  light_specular);
+  glLightfv(GL_LIGHT0, GL_AMBIENT,   light_ambient);
+
+  // Material (muted blue-gray diffuse + modest specular)
+  GLfloat mat_diffuse[]  = { 0.62f, 0.68f, 0.74f, 1.0f }; // your surface color
+  GLfloat mat_specular[] = { 0.25f, 0.25f, 0.25f, 1.0f }; // specular strength
+  GLfloat mat_shininess  = 48.0f;                         // tightness of highlight
+
+  glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE,   mat_diffuse);
+  glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR,  mat_specular);
+  glMaterialf (GL_FRONT_AND_BACK, GL_SHININESS, mat_shininess);
+
+  // Optional: mild scene ambient (keeps silhouettes visible w/o flattening)
+  GLfloat globalAmbient[] = { 0.08f, 0.08f, 0.08f, 1.0f };
+  glLightModelfv(GL_LIGHT_MODEL_AMBIENT, globalAmbient);
 
   QImage img(":/isophotes.png");
   glGenTextures(1, &vis.isophote_texture);

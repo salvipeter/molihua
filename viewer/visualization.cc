@@ -5,7 +5,7 @@ Visualization::Visualization() :
   show_solid(true), show_wireframe(false),
   show_offsets(false), show_chamfers(false), show_cage(true), show_misc_lines(false),
   boundaries(BoundaryType::NONE), ribbons(RibbonType::NONE),
-  ribbon_hmax(0.3), ribbon_sres(10), ribbon_hres(6),
+  ribbon_hmax(1.0), ribbon_sres(10), ribbon_hres(5),
   mean_min(0.0), mean_max(0.0), mean_cutoff_ratio(0.05),
   gauss_min(0.0), gauss_max(0.0), gauss_cutoff_ratio(0.05),
   slicing_dir(0, 0, 1), slicing_scaling(1)

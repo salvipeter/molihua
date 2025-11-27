@@ -81,6 +81,30 @@ void Viewer::setSlicingScaling(double scaling) {
   vis.slicing_scaling = scaling;
 }
 
+double Viewer::getRibbonHMax() const {
+  return vis.ribbon_hmax;
+}
+
+void Viewer::setRibbonHMax(double hmax) {
+  vis.ribbon_hmax = hmax;
+}
+
+size_t Viewer::getRibbonHRes() const {
+  return vis.ribbon_hres;
+}
+
+void Viewer::setRibbonHRes(size_t hres) {
+  vis.ribbon_hres = hres;
+}
+
+size_t Viewer::getRibbonSRes() const {
+  return vis.ribbon_sres;
+}
+
+void Viewer::setRibbonSRes(size_t sres) {
+  vis.ribbon_sres = sres;
+}
+
 void Viewer::deleteObjects() {
   objects.clear();
 }
@@ -306,7 +330,14 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       update();
       break;
     case Qt::Key_B:
-      vis.show_control_points = !vis.show_control_points;
+      switch (vis.ribbons) {
+      case Visualization::RibbonType::NONE:
+        vis.ribbons = Visualization::RibbonType::NET; break;
+      case Visualization::RibbonType::NET:
+        vis.ribbons = Visualization::RibbonType::SURFACE; break;
+      case Visualization::RibbonType::SURFACE:
+        vis.ribbons = Visualization::RibbonType::NONE; break;
+      }
       update();
       break;
     case Qt::Key_S:
@@ -420,7 +451,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;V: Toggle offset visualization</li>"
                "<li>&nbsp;F: Toggle chamfer visualization</li>"
                "<li>&nbsp;D: Toggle boundary visualization (none / CP / curve)</li>"
-               "<li>&nbsp;B: Toggle Bézier control polygon visualization</li>"
+               "<li>&nbsp;B: Toggle ribbon visualization (none / NET / surface)</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"
                "<li>&nbsp;K: Toggle miscellaneous lines</li>"

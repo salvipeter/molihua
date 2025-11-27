@@ -26,6 +26,12 @@ public:
   void setSlicingDir(double x, double y, double z);
   double getSlicingScaling() const;
   void setSlicingScaling(double scaling);
+  double getRibbonHMax() const;
+  void setRibbonHMax(double hmax);
+  size_t getRibbonHRes() const;
+  void setRibbonHRes(size_t hres);
+  size_t getRibbonSRes() const;
+  void setRibbonSRes(size_t sres);
   void deleteObjects();
   bool open(std::string filename);
   std::vector<std::shared_ptr<Object>> getObjects() const;

@@ -34,15 +34,15 @@ Window::Window(QApplication *parent) :
   quitAction->setStatusTip(tr("Quit the program"));
   connect(quitAction, &QAction::triggered, this, &Window::close);
 
-  auto cutoffAction = new QAction(tr("Set &mean cutoff ratio"), this);
+  auto cutoffAction = new QAction(tr("Set mean cutoff ratio"), this);
   cutoffAction->setStatusTip(tr("Set mean map cutoff ratio"));
   connect(cutoffAction, &QAction::triggered, this, &Window::setMeanCutoff);
 
-  auto rangeAction = new QAction(tr("Set mean &range"), this);
+  auto rangeAction = new QAction(tr("Set &mean range"), this);
   rangeAction->setStatusTip(tr("Set mean map range"));
   connect(rangeAction, &QAction::triggered, this, &Window::setMeanRange);
 
-  auto gcutoffAction = new QAction(tr("Set Gaussian &cutoff ratio"), this);
+  auto gcutoffAction = new QAction(tr("Set Gaussian cutoff ratio"), this);
   gcutoffAction->setStatusTip(tr("Set Gaussian map cutoff ratio"));
   connect(gcutoffAction, &QAction::triggered, this, &Window::setGaussCutoff);
 
@@ -53,6 +53,10 @@ Window::Window(QApplication *parent) :
   auto slicingAction = new QAction(tr("Set &slicing parameters"), this);
   slicingAction->setStatusTip(tr("Set contouring direction and scaling"));
   connect(slicingAction, &QAction::triggered, this, &Window::setSlicing);
+
+  auto ribbonAction = new QAction(tr("Set &ribbon parameters"), this);
+  ribbonAction->setStatusTip(tr("Set ribbon visualization parameters"));
+  connect(ribbonAction, &QAction::triggered, this, &Window::setRibbons);
 
   domain_window = new DomainWindow(this);
   auto domainAction = new QAction(tr("Show selected &domain"), this);
@@ -69,6 +73,7 @@ Window::Window(QApplication *parent) :
   visMenu->addAction(gcutoffAction);
   visMenu->addAction(grangeAction);
   visMenu->addAction(slicingAction);
+  visMenu->addAction(ribbonAction);
   visMenu->addAction(domainAction);
 
   auto scroll = new QScrollArea();
@@ -248,6 +253,49 @@ void Window::setSlicing() {
   if(dlg->exec() == QDialog::Accepted) {
     viewer->setSlicingDir(sb_v[0]->value(), sb_v[1]->value(), sb_v[2]->value());
     viewer->setSlicingScaling(sb_s->value());
+    viewer->update();
+  }
+}
+
+void Window::setRibbons() {
+  auto dlg = std::make_unique<QDialog>(this);
+  auto *hmax = new QDoubleSpinBox;
+  auto *hres = new QSpinBox;
+  auto *sres = new QSpinBox;
+  auto *cancel = new QPushButton(tr("Cancel"));
+  auto *ok     = new QPushButton(tr("Ok"));
+
+  hmax->setDecimals(2);
+  hmax->setRange(0.1, 1);
+  hmax->setSingleStep(0.1);
+  hmax->setValue(viewer->getRibbonHMax());
+
+  hres->setRange(2, 50);
+  hres->setSingleStep(1);
+  hres->setValue(viewer->getRibbonHRes());
+
+  sres->setRange(2, 50);
+  sres->setSingleStep(1);
+  sres->setValue(viewer->getRibbonSRes());
+
+  connect(cancel, &QPushButton::pressed, dlg.get(), &QDialog::reject);
+  connect(ok,     &QPushButton::pressed, dlg.get(), &QDialog::accept);
+  ok->setDefault(true);
+
+  auto form = new QFormLayout;
+
+  form->addRow("Max. h value:", hmax);
+  form->addRow("h-resolution:", hres);
+  form->addRow("s-resolution:", sres);
+  form->addRow(cancel, ok);
+
+  dlg->setWindowTitle(tr("Set ribbons"));
+  dlg->setLayout(form);
+
+  if(dlg->exec() == QDialog::Accepted) {
+    viewer->setRibbonHMax(hmax->value());
+    viewer->setRibbonHRes(hres->value());
+    viewer->setRibbonSRes(sres->value());
     viewer->update();
   }
 }

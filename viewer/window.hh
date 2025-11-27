@@ -21,6 +21,7 @@ private slots:
   void setGaussCutoff();
   void setGaussRange();
   void setSlicing();
+  void setRibbons();
   void startComputation(QString message);
   void midComputation(int percent);
   void endComputation();

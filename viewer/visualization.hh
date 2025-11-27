@@ -23,9 +23,14 @@ struct Visualization {
 
   // Flags
   VisType type;
-  bool show_control_points, show_solid, show_wireframe, show_offsets, show_chamfers, show_cage,
+  bool show_solid, show_wireframe, show_offsets, show_chamfers, show_cage,
     show_misc_lines;
   enum class BoundaryType { NONE, CP, CURVE } boundaries;
+  enum class RibbonType { NONE, NET, SURFACE } ribbons;
+
+  // Ribbon
+  double ribbon_hmax;
+  size_t ribbon_sres, ribbon_hres;
 
   // Mean curvature
   double mean_min, mean_max, mean_cutoff_ratio;

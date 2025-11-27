@@ -14,6 +14,21 @@ PHGB::PHGB(std::string filename) : Object(filename) {
 PHGB::~PHGB() {
 }
 
+static void bernstein(size_t n, double u, std::vector<double> &coeff) {
+  coeff.clear(); coeff.reserve(n + 1);
+  coeff.push_back(1.0);
+  double u1 = 1.0 - u;
+  for (size_t j = 1; j <= n; ++j) {
+    double saved = 0.0;
+    for (size_t k = 0; k < j; ++k) {
+      double tmp = coeff[k];
+      coeff[k] = saved + tmp * u1;
+      saved = tmp * u;
+    }
+    coeff.push_back(saved);
+  }
+}
+
 void PHGB::draw(const Visualization &vis) const {
   Object::draw(vis);
 
@@ -119,7 +134,7 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
-  if (vis.show_control_points) {
+  if (vis.ribbons != Visualization::RibbonType::NONE) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
     glColor3d(0.3, 0.3, 0.3);
@@ -129,17 +144,53 @@ void PHGB::draw(const Visualization &vis) const {
       const auto &patch = patches[i];
       for (const auto &loop : patch)
         for (const auto &ribbon : loop) {
-          for (const auto &row : ribbon) {
-            glBegin(GL_LINE_STRIP);
-            for (const auto &p : row)
-              glVertex3dv(p.data());
-            glEnd();
-          }
-          for (size_t j = 0; j < ribbon[0].size(); ++j) {
-            glBegin(GL_LINE_STRIP);
-            glVertex3dv(ribbon[0][j].data());
-            glVertex3dv(ribbon[1][j].data());
-            glEnd();
+          if (vis.ribbons == Visualization::RibbonType::NET) {
+            for (const auto &row : ribbon) {
+              glBegin(GL_LINE_STRIP);
+              for (const auto &p : row)
+                glVertex3dv(p.data());
+              glEnd();
+            }
+            for (size_t j = 0; j < ribbon[0].size(); ++j) {
+              glBegin(GL_LINE_STRIP);
+              glVertex3dv(ribbon[0][j].data());
+              glVertex3dv(ribbon[1][j].data());
+              glEnd();
+            }
+          } else {
+            // Ribbon surface visualization
+            std::vector<double> coeff_s, coeff_h;
+            size_t ds = ribbon[0].size() - 1, dh = 1;
+            for (size_t hi = 1; hi <= vis.ribbon_hres; ++hi) {
+              double h = vis.ribbon_hmax * hi / vis.ribbon_hres;
+              bernstein(dh, h, coeff_h);
+              glBegin(GL_LINE_STRIP);
+              for (size_t si = 0; si <= vis.ribbon_sres; ++si) {
+                double s = 1.0 * si / vis.ribbon_sres;
+                bernstein(ds, s, coeff_s);
+                Vector p(0.0, 0.0, 0.0);
+                for (size_t k = 0; k <= dh; ++k)
+                  for (size_t l = 0; l <= ds; ++l)
+                    p += ribbon[k][l] * coeff_h[k] * coeff_s[l];
+                glVertex3dv(p.data());
+              }
+              glEnd();
+            }
+            for (size_t si = 0; si <= vis.ribbon_sres; ++si) {
+              double s = 1.0 * si / vis.ribbon_sres;
+              bernstein(ds, s, coeff_s);
+              glBegin(GL_LINE_STRIP);
+              for (size_t hi = 0; hi <= vis.ribbon_hres; ++hi) {
+                double h = vis.ribbon_hmax * hi / vis.ribbon_hres;
+                bernstein(dh, h, coeff_h);
+                Vector p(0.0, 0.0, 0.0);
+                for (size_t k = 0; k <= dh; ++k)
+                  for (size_t l = 0; l <= ds; ++l)
+                    p += ribbon[k][l] * coeff_h[k] * coeff_s[l];
+                glVertex3dv(p.data());
+              }
+              glEnd();
+            }
           }
         }
     }

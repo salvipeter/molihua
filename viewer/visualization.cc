@@ -16,7 +16,7 @@ GLuint Visualization::isophote_texture,
   Visualization::environment_texture,
   Visualization::slicing_texture;
 
-static Vector HSV2RGB(Vector hsv) {
+Vector Visualization::HSV2RGB(Vector hsv) {
   // As in Wikipedia
   double c = hsv[2] * hsv[1];
   double h = hsv[0] / 60;

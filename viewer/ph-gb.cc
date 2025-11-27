@@ -137,13 +137,14 @@ void PHGB::draw(const Visualization &vis) const {
   if (vis.ribbons != Visualization::RibbonType::NONE) {
     glDisable(GL_LIGHTING);
     glLineWidth(3.0);
-    glColor3d(0.3, 0.3, 0.3);
     for (size_t i = 0; i < patches.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
         continue;
       const auto &patch = patches[i];
       for (const auto &loop : patch)
-        for (const auto &ribbon : loop) {
+        for (size_t ri = 0; ri < loop.size(); ++ri) {
+          const auto &ribbon = loop[ri];
+          glColor3dv(Visualization::HSV2RGB({360.0 * ri / loop.size(), 1, 1}).data());
           if (vis.ribbons == Visualization::RibbonType::NET) {
             for (const auto &row : ribbon) {
               glBegin(GL_LINE_STRIP);

@@ -46,5 +46,6 @@ struct Visualization {
   GLuint current_isophote_texture;
 
   // Utilities
+  static Vector HSV2RGB(Vector hsv);
   static Vector colorMap(double min, double max, double d);
 };

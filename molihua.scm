@@ -932,6 +932,22 @@
     (or (find-connection c0 c1 candidates)
         (error "no opposite face"))))
 
+;;; Cuts back a line segment (p . q) to at most distance d (the starting point is unchanged)
+(define (line-cutback line d)
+  (let ((d0 (point-distance (car line) (cdr line))))
+    (if (<= d0 d)
+        line
+        (cons (car line)
+              (v+ (car line)
+                  (v* (vnormalize (v- (cdr line) (car line))) d))))))
+
+(define (chamfer-plane i)
+  (let ((points (map (lambda (j) (vector-ref offset-vertices j))
+                     (flatten-pairs (chamfer i)))))
+    (cons (car points)
+          (vnormalize (cross-product (v- (cadr points) (car points))
+                                     (v- (caddr points) (car points)))))))
+
 ;;; Face i side j
 ;;; m: chamfer midpoint
 ;;; o: chamfer vertex in the current face
@@ -973,6 +989,18 @@
          (e1 (v* (v+ o1 (scaled-relative m1 cdr (common-element c1 opp))) 1/2))
          (e0* (v+ m0 (v* (vnormalize (v- e0 m0)) scale-s)))
          (e1* (v+ m1 (v* (vnormalize (v- e1 m1)) scale-s)))
+         (edge (cons (vector-ref vertices (list-ref face j))
+                     (vector-ref vertices (list-ref face j+1))))
+         (plane0 (chamfer-plane (list-ref face j)))
+         (plane1 (chamfer-plane (list-ref face j+1)))
+         (range0 (point-distance m0 (plane-line-intersection plane0 edge)))
+         (range1 (point-distance m1 (plane-line-intersection plane1 edge)))
+         (e0* (if (= (length fc0) 3)
+                  (cdr (line-cutback (cons m0 e0*) range0))
+                  e0*))
+         (e1* (if (= (length fc1) 3)
+                  (cdr (line-cutback (cons m1 e1*) range1))
+                  e1*))
          (f0 (v* (v+ o0 (if (pair? (list-ref offset-face j))
                             (scaled-relative m0 car (list-ref offset-face j))
                             (scaled-relative m0 cdr (common-element c0 opp-1))))

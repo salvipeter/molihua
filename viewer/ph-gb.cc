@@ -303,16 +303,13 @@ void PHGB::updateBaseMesh() {
     }
     auto surface_type =
       Options::instance()->biharmonic() ? libcdgbs::SurfGBS::BIHARMONIC : libcdgbs::SurfGBS::GBS;
-    if (Options::instance()->reparam())
-      surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh, true,
-                                     *Options::instance()->reparam(),
-                                     Options::instance()->hsplit(),
-                                     Options::instance()->C1(),
-                                     Options::instance()->scaling(),
-                                     surface_type);
-    else
-      surf.load_ribbons_and_evaluate(ribbons, edge_size, patch_mesh, false, 0.0, true, false,
-                                     Options::instance()->scaling(), surface_type);
+    libcdgbs::SurfGBS::InputParams params(edge_size,
+                                          static_cast<bool>(Options::instance()->reparam()),
+                                          *Options::instance()->reparam(),
+                                          Options::instance()->hsplit(),
+                                          Options::instance()->C1(),
+                                          Options::instance()->scaling());
+    surf.load_ribbons_and_evaluate(ribbons, patch_mesh, params, surface_type);
     domains.push_back(surf.meshDomain);
     mergeMeshes(mesh, patch_mesh, ++id);
   }

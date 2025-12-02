@@ -308,7 +308,8 @@ void PHGB::updateBaseMesh() {
                                           *Options::instance()->reparam(),
                                           Options::instance()->hsplit(),
                                           Options::instance()->C1(),
-                                          Options::instance()->scaling());
+                                          Options::instance()->scaling(),
+                                          Options::instance()->hWidth());
     surf.load_ribbons_and_evaluate(ribbons, patch_mesh, params, surface_type);
     domains.push_back(surf.meshDomain);
     mergeMeshes(mesh, patch_mesh, ++id);

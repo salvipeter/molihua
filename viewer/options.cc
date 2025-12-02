@@ -27,6 +27,10 @@ bool Options::biharmonic() const {
   return biharmonicCheck->checkState() == Qt::Checked;
 }
 
+bool Options::hWidth() const {
+  return hwidthCheck->checkState() == Qt::Checked;
+}
+
 Options *Options::instance(Viewer *viewer, DomainWindow *domain_window) {
   static Options *instance = new Options(viewer, domain_window);
   return instance;
@@ -163,6 +167,11 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   C1Check->setChecked(true);
   geometryLayout->addWidget(C1Check);
   connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
+
+  hwidthCheck = new QCheckBox("Cross-reparameterization");
+  hwidthCheck->setChecked(false);
+  geometryLayout->addWidget(hwidthCheck);
+  connect(hwidthCheck, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   geometryLayout->addWidget(new QLabel("Loop scaling factor:"));
   scalingBox = new QDoubleSpinBox();

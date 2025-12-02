@@ -18,6 +18,7 @@ public:
   bool hsplit() const;
   bool C1() const;
   bool biharmonic() const;
+  bool hWidth() const;
 
 public slots:
   void fullnessChanged(double full);
@@ -49,5 +50,5 @@ private:
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;
   QDoubleSpinBox *reparamBox, *scalingBox;
-  QCheckBox *hsplitCheck, *C1Check, *biharmonicCheck;
+  QCheckBox *hsplitCheck, *C1Check, *biharmonicCheck, *hwidthCheck;
 };

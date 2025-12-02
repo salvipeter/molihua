@@ -4,6 +4,7 @@
 (define sharp-offset 0.01)              ; offset distance for "sharp" edges
 (define shrink-inwards-scaling 1)       ; extra scaling of inwards shrink
 (define cross-tangent-scaling? #f)      ; does tangent scaling affect ribbon width?
+(define new-tangent-setting? #f)        ; use the new tangent concept
 
 
 ;;; Global variables
@@ -948,12 +949,65 @@
           (vnormalize (cross-product (v- (cadr points) (car points))
                                      (v- (caddr points) (car points)))))))
 
+(define (generate-ribbon i j)
+  (if new-tangent-setting?
+      (generate-ribbon-new i j)
+      (generate-ribbon-old i j)))
+
 ;;; Face i side j
 ;;; m: chamfer midpoint
 ;;; o: chamfer vertex in the current face
 ;;; e: chamfer midpoint between the current and opposite faces
 ;;; f: chamfer midpoint between the current and adjacent-opposite faces
-(define (generate-ribbon i j)
+(define (generate-ribbon-old i j)
+  (let* ((face (nested-ref faces i))
+         (offset-face (nested-ref offset-faces i))
+         (n (length face))
+         (j-1 (modulo (- j 1) n))
+         (j+1 (modulo (+ j 1) n))
+         (j+2 (modulo (+ j 2) n))
+         (c0 (chamfer (list-ref face j)))
+         (c1 (chamfer (list-ref face j+1)))
+         (fc0 (flatten-pairs c0))
+         (fc1 (flatten-pairs c1))
+         (m0 (v* (apply v+ (map (lambda (v)
+                                  (vector-ref offset-vertices v))
+                                fc0))
+                 (/ (length fc0))))
+         (m1 (v* (apply v+ (map (lambda (v)
+                                  (vector-ref offset-vertices v))
+                                fc1))
+                 (/ (length fc1))))
+         (select-from-pair (lambda (f x) (if (pair? x) (f x) x)))
+         (scaled-offset (lambda (c f i)
+                          (let ((i (select-from-pair f i)))
+                            (v+ c (v* (v- (vector-ref offset-vertices i) c)
+                                      tangent-scale)))))
+         (o0 (scaled-offset m0 cdr (list-ref offset-face j)))
+         (o1 (scaled-offset m1 car (list-ref offset-face j+1)))
+         ;; the opposite face includes a vertex index from both c0 and c1
+         (opp (find-opposite i (list-ref face j) c0 c1))
+         (opp-1 (find-opposite i (list-ref face j) c0 (chamfer (list-ref face j-1))))
+         (opp+1 (find-opposite i (list-ref face j+1) c1 (chamfer (list-ref face j+2))))
+         (e0 (v* (v+ o0 (scaled-offset m0 car (common-element c0 opp))) 1/2))
+         (e1 (v* (v+ o1 (scaled-offset m1 cdr (common-element c1 opp))) 1/2))
+         (f0 (v* (v+ o0 (if (pair? (list-ref offset-face j))
+                            (scaled-offset m0 car (list-ref offset-face j))
+                            (scaled-offset m0 cdr (common-element c0 opp-1))))
+                 1/2))
+         (f1 (v* (v+ o1 (if (pair? (list-ref offset-face j+1))
+                            (scaled-offset m1 cdr (list-ref offset-face j+1))
+                            (scaled-offset m1 car (common-element c1 opp+1))))
+                 1/2)))
+    (cons (list m0 e0 e1 m1)
+          (if cross-tangent-scaling?
+              (list f0 o0 o1 f1)
+              (list (v+ m0 (v* (v- f0 m0) (/ tangent-scale)))
+                    (v+ e0 (v* (v- o0 e0) (/ tangent-scale)))
+                    (v+ e1 (v* (v- o1 e1) (/ tangent-scale)))
+                    (v+ m1 (v* (v- f1 m1) (/ tangent-scale))))))))
+
+(define (generate-ribbon-new i j)
   (let* ((face (nested-ref faces i))
          (offset-face (nested-ref offset-faces i))
          (n (length face))

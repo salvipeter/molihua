@@ -102,7 +102,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   geometryLayout->addWidget(new QLabel("Tangent scaling:"));
   auto tanscaleBox = new QDoubleSpinBox();
   tanscaleBox->setRange(0.01, 10.0);
-  tanscaleBox->setValue(1.0);
+  tanscaleBox->setValue(4.0/3.0);
   tanscaleBox->setSingleStep(0.1);
   tangentScaleChanged(tanscaleBox->value());
   geometryLayout->addWidget(tanscaleBox);

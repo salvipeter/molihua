@@ -248,7 +248,7 @@ namespace {
 
   template <typename T>
   void mergeMeshes(BaseMesh &m1, const T &m2, size_t id) {
-    CmpVec comp(1e-10);
+    CmpVec comp(1e-4);
     std::map<Vector, BaseMesh::VertexHandle, CmpVec> vmap(comp);
     std::map<typename T::VertexHandle, BaseMesh::VertexHandle> hmap;
     for (auto v : m1.vertices())

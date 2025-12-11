@@ -7,12 +7,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(OpenGL_GL_PREFERENCE LEGACY)
 
 if(WITH_JET_FITTING)
-  find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+  find_package(Eigen3 REQUIRED NO_MODULE)
   find_package(CGAL REQUIRED NO_MODULE)
 endif(WITH_JET_FITTING)
 find_package(OpenGL REQUIRED)
 find_package(OpenMesh REQUIRED)
-find_package(Eigen3 3.3 REQUIRED NO_MODULE)
+find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(Qt6 REQUIRED COMPONENTS Core OpenGL OpenGLWidgets Widgets Xml)
 find_package(QGLViewer REQUIRED)
 find_package(LibGeom REQUIRED)
@@ -50,10 +50,8 @@ endif()
 include_directories(
   .
   ${CGAL_INCLUDE_DIRS}
-  ${EIGEN3_INCLUDE_DIR}
   ${OPENGL_INCLUDE_DIR}
   ${OPENMESH_INCLUDE_DIR}
-  ${EIGEN3_INCLUDE_DIR}
   ${Qt6OpenGL_INCLUDE_DIRS}
   ${Qt6Widgets_INCLUDE_DIRS}
   ${Qt6Xml_INCLUDE_DIRS}
@@ -91,6 +89,7 @@ endif(UNIX)
 
 target_link_libraries(viewer PUBLIC
   ${OPENGL_LIBRARIES}
+  Eigen3::Eigen
   ${OPENMESH_LIBRARIES}
   Qt6::Core
   Qt6::OpenGL

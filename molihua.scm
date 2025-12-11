@@ -1176,6 +1176,33 @@
                  (v+ p (v* (v- q1 q2) (+ c 3/2)))))
              (car r1) (cdr r1) (reverse (cdr r2)))))
 
+(define (find-chamfer-with-midpoint p)
+  (let loop ((i 0))
+    (if (= i (vector-length vertices))
+        (error "cannot find chamfer")
+        (let* ((c (chamfer i))
+               (f (flatten-pairs c))
+               (m (v* (apply v+ (map (lambda (v)
+                                       (vector-ref offset-vertices v))
+                                     f))
+                      (/ (length f)))))
+          (if (equal? m p)
+              c
+              (loop (+ i 1)))))))
+
+(define (direction-blend-magic r1 r2)
+  (define (get-scaling p)
+    (if (= (length (flatten-pairs (find-chamfer-with-midpoint p))) 3)
+        2/3
+        1/2))
+  (let* ((left (get-scaling (caar r1)))
+         (right (get-scaling (caar r2))))
+    (cons (car r1)
+                (map (lambda (p q1 q2 s)
+                       (v+ p (v* (v- q1 q2) s)))
+                     (car r1) (cdr r1) (reverse (cdr r2))
+                     `(,left 1/2 1/2 ,right)))))
+
 (define (direction-blend-cubic-linear r1 r2)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
@@ -1419,6 +1446,7 @@
                          ((case direction-blend-type
                             ((cubic-tomi-simple) direction-blend-cubic-tomi)
                             ((cubic-peti-simple) direction-blend-cubic-peti)
+                            ((magic) direction-blend-magic)
                             ((cubic-linear) direction-blend-cubic-linear)
                             ((cubic-linear-c0) direction-blend-cubic-linear-c0)
                             ((quartic-simple quartic-no-alpha) direction-blend-quartic)

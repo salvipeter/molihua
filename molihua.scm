@@ -6,6 +6,7 @@
 (define cross-tangent-scaling? #f)      ; does tangent scaling affect ribbon width?
 (define new-tangent-setting? #f)        ; use the new tangent concept
 (define tangent-scaling-everywhere? #f) ; when #f tangent scaling is applied only on triangles
+(define magic-constant 2/3)             ; scaling of triangle end-cross-derivatives
 
 
 ;;; Global variables
@@ -1193,7 +1194,7 @@
 (define (direction-blend-magic r1 r2)
   (define (get-scaling p)
     (if (= (length (flatten-pairs (find-chamfer-with-midpoint p))) 3)
-        2/3
+        magic-constant
         1/2))
   (let* ((left (get-scaling (caar r1)))
          (right (get-scaling (caar r2))))

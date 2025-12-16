@@ -17,4 +17,5 @@ private:
   void showEvent(QShowEvent *event) override;
 
   libcdgbs::Mesh domain;
+  QRect window_geom;
 };

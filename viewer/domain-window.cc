@@ -17,6 +17,7 @@ void DomainWindow::setDomain(const std::optional<libcdgbs::Mesh> &mesh) {
 }
 
 void DomainWindow::closeEvent(QCloseEvent *) {
+  window_geom = frameGeometry();
   hide();
 }
 
@@ -52,4 +53,7 @@ void DomainWindow::paintEvent(QPaintEvent *event) {
 
 void DomainWindow::showEvent(QShowEvent *event) {
   QDialog::showEvent(event);
+  setSizeGripEnabled(true);
+  if (!window_geom.isEmpty())
+    setGeometry(window_geom);
 }

@@ -32,6 +32,7 @@ public slots:
   void dblendChanged(int index);
   void quinticCubicChanged(Qt::CheckState state);
   void bsplineConcaveChanged(Qt::CheckState state);
+  void scalingChanged(Qt::CheckState state);
   void exportClicked();
 
 private slots:
@@ -50,5 +51,5 @@ private:
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;
   QDoubleSpinBox *reparamBox, *scalingBox;
-  QCheckBox *hsplitCheck, *C1Check, *biharmonicCheck, *hwidthCheck;
+  QCheckBox *hsplitCheck, *C1Check, *biharmonicCheck, *hwidthCheck, *scalingCheck;
 };

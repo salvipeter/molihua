@@ -175,14 +175,19 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   connect(hwidthCheck, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   geometryLayout->addWidget(new QLabel("Loop scaling factor:"));
+  scalingCheck = new QCheckBox("Automatic");
+  scalingCheck->setChecked(true);
+  geometryLayout->addWidget(scalingCheck);
   scalingBox = new QDoubleSpinBox();
   scalingBox->setRange(0.1, 1.0);
   scalingBox->setValue(0.7);
   scalingBox->setSingleStep(0.1);
   geometryLayout->addWidget(scalingBox);
+  connect(scalingCheck, &QCheckBox::checkStateChanged, this, &Options::scalingChanged);
   connect(scalingBox, &QDoubleSpinBox::valueChanged, viewer, &Viewer::reload);
   connect(scalingBox, &QDoubleSpinBox::valueChanged, this, &Options::updateDomain);
-
+  scalingChanged(scalingCheck->checkState());
+ 
   biharmonicCheck = new QCheckBox("Biharmonic surfaces");
   biharmonicCheck->setChecked(false);
   geometryLayout->addWidget(biharmonicCheck);
@@ -282,7 +287,17 @@ std::optional<double> Options::reparam() const {
   return {};
 }
 
+void Options::scalingChanged(Qt::CheckState state) {
+  if (state == Qt::Checked)
+    scalingBox->setEnabled(false);
+  else
+    scalingBox->setEnabled(true);
+  viewer->reload();
+}
+
 double Options::scaling() const {
+  if (scalingCheck->checkState() == Qt::Checked)
+    return -1.0;
   return scalingBox->value();
 }
 

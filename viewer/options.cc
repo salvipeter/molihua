@@ -1,5 +1,3 @@
-#include <libguile.h>
-
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDoubleSpinBox>
@@ -13,6 +11,7 @@
 #include "domain-window.hh"
 #include "options.hh"
 #include "ph-gb.hh"
+#include "scheme-wrapper.hh"
 #include "viewer.hh"
 
 bool Options::hsplit() const {
@@ -206,12 +205,12 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
 }
 
 void Options::fullnessChanged(double full) {
-  scm_c_define("fullness", scm_from_double(full));
+  SchemeWrapper::setVariable("fullness", SchemeWrapper::double2sexp(full));
   viewer->reload();
 }
 
 void Options::mvecScaleChanged(double scale) {
-  scm_c_define("midvector-scale", scm_from_double(scale));
+  SchemeWrapper::setVariable("midvector-scale", SchemeWrapper::double2sexp(scale));
   viewer->reload();
 }
 
@@ -222,38 +221,38 @@ void Options::onePatchChanged(Qt::CheckState state) {
     selectedChanged(selectedBox->value());
   } else {
     selectedBox->setEnabled(false);
-    scm_c_define("only-one-patch", SCM_BOOL_F);
+    SchemeWrapper::setVariable("only-one-patch", SchemeWrapper::bool2sexp(false));
     viewer->update();
     domain_window->setDomain(std::optional<libcdgbs::Mesh>());
   }
 }
 
 void Options::resolutionChanged(int res) {
-  scm_c_define("resolution", scm_from_uint(res));
+  SchemeWrapper::setVariable("resolution", SchemeWrapper::uint2sexp(res));
   viewer->reload();
 }
 
 void Options::selectedChanged(int selected) {
-  scm_c_define("only-one-patch", scm_from_uint(selected));
+  SchemeWrapper::setVariable("only-one-patch", SchemeWrapper::uint2sexp(selected));
   viewer->update();
   updateDomain();
 }
 
 void Options::edgeChanged(Qt::CheckState state) {
-  scm_c_define("edge-based-offsets?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  SchemeWrapper::setVariable("edge-based-offsets?", SchemeWrapper::bool2sexp(state == Qt::Checked));
   viewer->reload();
 }
 
 void Options::shrinkChanged(Qt::CheckState state, bool inwards) {
   if (inwards)
-    scm_c_define("shrink-inwards?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+    SchemeWrapper::setVariable("shrink-inwards?", SchemeWrapper::bool2sexp(state == Qt::Checked));
   else
-    scm_c_define("shrink-outwards?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+    SchemeWrapper::setVariable("shrink-outwards?", SchemeWrapper::bool2sexp(state == Qt::Checked));
   viewer->reload();
 }
 
 void Options::tangentScaleChanged(double scale) {
-  scm_c_define("tangent-scale", scm_from_double(scale));
+  SchemeWrapper::setVariable("tangent-scale", SchemeWrapper::double2sexp(scale));
   viewer->reload();
 }
 
@@ -264,12 +263,12 @@ void Options::dblendChanged(int index) {
     "cubic-linear", "cubic-linear-c0", "quartic-simple", "quartic-no-alpha", "quartic-tomi-simple",
     "quartic-tomi-no-alpha", "quintic", "quintic-tomi"
   };
-  scm_c_define("direction-blend-type", scm_from_utf8_symbol(types[index].c_str()));
+  SchemeWrapper::setVariable("direction-blend-type", SchemeWrapper::string2symbol(types[index]));
   viewer->reload();
 }
 
 void Options::quinticCubicChanged(Qt::CheckState state) {
-  scm_c_define("cubic-cross-degree?", state == Qt::Checked ? SCM_BOOL_T : SCM_BOOL_F);
+  SchemeWrapper::setVariable("cubic-cross-degree?", SchemeWrapper::bool2sexp(state == Qt::Checked));
   viewer->reload();
 }
 
@@ -304,8 +303,8 @@ double Options::scaling() const {
 void Options::exportClicked() {
   // Check if selection is valid
   size_t selected = selectedBox->value() - 1;
-  SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
-  size_t n_ribbons = scm_to_uint(scm_vector_length(ribbons));
+  auto ribbons = SchemeWrapper::getVariable("ribbons");
+  size_t n_ribbons = SchemeWrapper::vectorLength(ribbons);
   if (selected >= n_ribbons)
     return;
 
@@ -317,8 +316,8 @@ void Options::exportClicked() {
     name += ".mgbs";
 
   // Export
-  scm_c_eval_string(("(write-patch-mgbs (vector-ref ribbons %1) \"" + name + "\")")
-                    .arg(selected).toUtf8().data());
+  QString cmd = ("(write-patch-mgbs (vector-ref ribbons %1) \"" + name + "\")").arg(selected);
+  SchemeWrapper::evaluateString(cmd.toUtf8().data());
 }
 
 void Options::updateDomain() const {

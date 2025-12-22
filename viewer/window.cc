@@ -1,7 +1,5 @@
 #include <memory>
 
-#include <libguile.h>
-
 #include <QtWidgets>
 
 #include "domain-window.hh"

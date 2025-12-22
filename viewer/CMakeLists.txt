@@ -70,6 +70,7 @@ add_executable(viewer WIN32
   object.cc
   options.cc
   ph-gb.cc
+  scheme-wrapper.cc
   viewer.cc
   visualization.cc
   window.cc

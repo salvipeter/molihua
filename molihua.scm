@@ -6,7 +6,7 @@
 (define cross-tangent-scaling? #f)      ; does tangent scaling affect ribbon width?
 (define new-tangent-setting? #f)        ; use the new tangent concept
 (define tangent-scaling-everywhere? #f) ; when #f tangent scaling is applied only on triangles
-(define magic-constant 2/3)             ; scaling of triangle end-cross-derivatives
+(define magic-constant 4/5)             ; scaling of triangle end-cross-derivatives
 
 
 ;;; Global variables

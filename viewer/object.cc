@@ -1,6 +1,5 @@
-#include <libguile.h>
-
 #include "object.hh"
+#include "scheme-wrapper.hh"
 
 #ifdef USE_JET_FITTING
 #include "jet-wrapper.hh"
@@ -17,10 +16,10 @@ const BaseMesh &Object::baseMesh() const {
 }
 
 void Object::draw(const Visualization &vis) const {
-  SCM onePatch = scm_variable_ref(scm_c_lookup("only-one-patch"));
+  auto onePatch = SchemeWrapper::getVariable("only-one-patch");
   size_t show_only = 0;
-  if (onePatch != SCM_BOOL_F)
-    show_only = scm_to_uint(onePatch);
+  if (!SchemeWrapper::isFalse(onePatch))
+    show_only = SchemeWrapper::sexp2uint(onePatch);
 
   GLfloat mat_specular[] = { 0.52f, 0.52f, 0.52f, 1.0f };
   GLfloat mat_shininess  = 84.0f;

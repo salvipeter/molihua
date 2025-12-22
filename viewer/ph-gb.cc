@@ -1,11 +1,10 @@
-#include <libguile.h>
-
 #include <QtWidgets>
 
 #include <libcdgbs/SurfGBS.hpp>
 
 #include "options.hh"
 #include "ph-gb.hh"
+#include "scheme-wrapper.hh"
 
 PHGB::PHGB(std::string filename) : Object(filename) {
   reload();
@@ -32,10 +31,10 @@ static void bernstein(size_t n, double u, std::vector<double> &coeff) {
 void PHGB::draw(const Visualization &vis) const {
   Object::draw(vis);
 
-  SCM onePatch = scm_variable_ref(scm_c_lookup("only-one-patch"));
+  auto onePatch = SchemeWrapper::getVariable("only-one-patch");
   size_t show_only = 0;
-  if (onePatch != SCM_BOOL_F)
-    show_only = scm_to_uint(onePatch);
+  if (!SchemeWrapper::isFalse(onePatch))
+    show_only = SchemeWrapper::sexp2uint(onePatch);
 
   if (vis.show_cage) {
     glDisable(GL_LIGHTING);
@@ -274,7 +273,7 @@ namespace {
 
 void PHGB::updateBaseMesh() {
   QApplication::setOverrideCursor(Qt::WaitCursor);
-  size_t resolution = scm_to_uint(scm_variable_ref(scm_c_lookup("resolution")));
+  size_t resolution = SchemeWrapper::sexp2uint(SchemeWrapper::getVariable("resolution"));
   mesh.clear();
   domains.clear();
   double large = std::numeric_limits<double>::max();
@@ -319,44 +318,15 @@ void PHGB::updateBaseMesh() {
   QApplication::restoreOverrideCursor();
 }
 
-SCM safeLoad(void *data) {
-  auto filename = reinterpret_cast<std::string *>(data);
-  scm_c_primitive_load("molihua.scm");
-  scm_c_eval_string((std::string("(load-model \"") + *filename + "\")").c_str());
-  return SCM_UNSPECIFIED;
-}
-
-static bool load_ok;
-
-SCM errorHandler(void *, SCM key, SCM args) {
-  auto display_fun = scm_c_public_ref("guile", "display");
-  key = scm_object_to_string(key, display_fun);
-  args = scm_object_to_string(args, display_fun);
-  char *key_str = scm_to_stringn(key, nullptr, "UTF-8", SCM_FAILED_CONVERSION_QUESTION_MARK);
-  char *args_str = scm_to_stringn(args, nullptr, "UTF-8", SCM_FAILED_CONVERSION_QUESTION_MARK);
-  auto port = scm_open_output_string();
-  auto stack = scm_make_stack(SCM_BOOL_T, SCM_EOL);
-  scm_display_backtrace(stack, port, SCM_BOOL_F, SCM_BOOL_F);
-  auto bt = scm_get_output_string(port);
-  char *bt_str = scm_to_stringn(bt, nullptr, "UTF-8", SCM_FAILED_CONVERSION_QUESTION_MARK);
-  QString text = QString("Exception: ") + key_str + "\n" + args_str + "\nBacktrace:\n" + bt_str;
-  QMessageBox::critical(nullptr, "Script Error", text);
-  free(bt_str);
-  free(args_str);
-  free(key_str);
-  load_ok = false;
-  return SCM_UNSPECIFIED;
-}
-
-SCM dummyHandler(void *, SCM, SCM) {
-  return SCM_UNSPECIFIED;
-}
-
 bool PHGB::reload() {
-  load_ok = true;
-  scm_c_catch(SCM_BOOL_T, safeLoad, reinterpret_cast<void *>(const_cast<std::string *>(&filename)),
-              dummyHandler, nullptr, errorHandler, nullptr);
-  if (!load_ok)
+  auto cmd = std::string("(begin"
+                         "  (import (scheme base))"
+                         "  (guard (ex (else #f))"
+                         "    (load \"molihua.scm\")"
+                         "    (load-model \"") + filename + "\")"
+                         "    #t))";
+  auto load_ok = SchemeWrapper::evaluateString(cmd);
+  if (SchemeWrapper::isFalse(load_ok))
     return false;
 
   size_t n_vertices, n_faces;
@@ -365,27 +335,27 @@ bool PHGB::reload() {
   {
     cage.clear();
     face_indices.clear();
-    SCM vertices = scm_variable_ref(scm_c_lookup("vertices"));
-    SCM faces = scm_variable_ref(scm_c_lookup("faces"));
-    n_vertices = scm_to_uint(scm_vector_length(vertices));
-    n_faces = scm_to_uint(scm_vector_length(faces));
+    auto vertices = SchemeWrapper::getVariable("vertices");
+    auto faces = SchemeWrapper::getVariable("faces");
+    n_vertices = SchemeWrapper::vectorLength(vertices);
+    n_faces = SchemeWrapper::vectorLength(faces);
     std::vector<CageMesh::VertexHandle> handles;
     for (size_t i = 0; i < n_vertices; ++i) {
       Vector p;
-      SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
+      auto lst = SchemeWrapper::vectorElement(vertices, i);
       for (size_t j = 0; j < 3; ++j)
-        p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
+        p[j] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(lst, j));
       handles.push_back(cage.add_vertex(p));
     }
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM loops = scm_vector_ref(faces, scm_from_uint(i));
-      size_t m = scm_to_uint(scm_length(loops));
+      auto loops = SchemeWrapper::vectorElement(faces, i);
+      size_t m = SchemeWrapper::listLength(loops);
       for (size_t l = 0; l < m; ++l) {
-        SCM lst = scm_list_ref(loops, scm_from_uint(l));
-        size_t n = scm_to_uint(scm_length(lst));
+        auto lst = SchemeWrapper::listElement(loops, l);
+        size_t n = SchemeWrapper::listLength(lst);
         std::vector<CageMesh::VertexHandle> face;
         for (size_t j = 0; j < n; ++j)
-          face.push_back(handles[scm_to_uint(scm_list_ref(lst, scm_from_uint(j)))]);
+          face.push_back(handles[SchemeWrapper::sexp2uint(SchemeWrapper::listElement(lst, j))]);
         cage.add_face(face);
         face_indices.push_back(i);
       }
@@ -394,28 +364,31 @@ bool PHGB::reload() {
 
   // Extract ribbons
   {
-    SCM ribbons = scm_variable_ref(scm_c_lookup("ribbons"));
+    auto ribbons = SchemeWrapper::getVariable("ribbons");
     patches.resize(n_faces);
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM loops = scm_vector_ref(ribbons, scm_from_uint(i));
-      size_t m = scm_to_uint(scm_length(loops));
+      auto loops = SchemeWrapper::vectorElement(ribbons, i);
+      size_t m = SchemeWrapper::listLength(loops);
       patches[i].resize(m);
       for (size_t l = 0; l < m; ++l) {
-        SCM loop = scm_list_ref(loops, scm_from_uint(l));
-        size_t n = scm_to_uint(scm_length(loop));
+        auto loop = SchemeWrapper::listElement(loops, l);
+        size_t n = SchemeWrapper::listLength(loop);
         patches[i][l].resize(n);
         for (size_t j = 0; j < n; ++j) {
-          SCM ribbon = scm_list_ref(loop, scm_from_uint(j));
-          std::array<SCM, 2> curves = { scm_car(ribbon), scm_cdr(ribbon) };
+          auto ribbon = SchemeWrapper::listElement(loop, j);
+          std::array<SchemeWrapper::Sexp, 2> curves = {
+            SchemeWrapper::car(ribbon),
+            SchemeWrapper::cdr(ribbon)
+          };
           for (size_t k = 0; k < 2; ++k) {
             patches[i][l][j][k].clear();
-            while (scm_null_p(curves[k]) == SCM_BOOL_F) {
-              SCM point = scm_car(curves[k]);
+            while (!SchemeWrapper::isNull(curves[k])) {
+              auto point = SchemeWrapper::car(curves[k]);
               Vector p;
               for (size_t c = 0; c < 3; ++c)
-                p[c] = scm_to_double(scm_list_ref(point, scm_from_uint(c)));
+                p[c] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(point, c));
               patches[i][l][j][k].push_back(p);
-              curves[k] = scm_cdr(curves[k]);
+              curves[k] = SchemeWrapper::cdr(curves[k]);
             }
           }
         }
@@ -425,48 +398,48 @@ bool PHGB::reload() {
 
   // Extract offsets & chamfers
   {
-    SCM vertices = scm_variable_ref(scm_c_lookup("offset-vertices"));
-    SCM faces = scm_variable_ref(scm_c_lookup("offset-faces"));
-    size_t n_off_vertices = scm_to_uint(scm_vector_length(vertices));
+    auto vertices = SchemeWrapper::getVariable("offset-vertices");
+    auto faces = SchemeWrapper::getVariable("offset-faces");
+    size_t n_off_vertices = SchemeWrapper::vectorLength(vertices);
     offset_vertices.resize(n_off_vertices);
     offset_faces.resize(n_faces);
     chamfers.resize(n_vertices);
     for (size_t i = 0; i < n_off_vertices; ++i) {
       auto &p = offset_vertices[i];
-      SCM lst = scm_vector_ref(vertices, scm_from_uint(i));
+      auto lst = SchemeWrapper::vectorElement(vertices, i);
       for (size_t j = 0; j < 3; ++j)
-        p[j] = scm_to_double(scm_list_ref(lst, scm_from_uint(j)));
+        p[j] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(lst, j));
     }
     for (size_t i = 0; i < n_faces; ++i) {
-      SCM loops = scm_vector_ref(faces, scm_from_uint(i));
-      size_t m = scm_to_uint(scm_length(loops));
+      auto loops = SchemeWrapper::vectorElement(faces, i);
+      size_t m = SchemeWrapper::listLength(loops);
       auto &face = offset_faces[i];
       face.resize(m);
       for (size_t l = 0; l < m; ++l) {
-        SCM lst = scm_list_ref(loops, scm_from_uint(l));
-        size_t n = scm_to_uint(scm_length(lst));
+        auto lst = SchemeWrapper::listElement(loops, l);
+        size_t n = SchemeWrapper::listLength(lst);
         face[l].clear();
         for (size_t j = 0; j < n; ++j) {
-          SCM index = scm_list_ref(lst, scm_from_uint(j));
-          if (scm_is_pair(index)) {
-            face[l].push_back(scm_to_uint(scm_car(index)));
-            face[l].push_back(scm_to_uint(scm_cdr(index)));
+          auto index = SchemeWrapper::listElement(lst, j);
+          if (SchemeWrapper::isPair(index)) {
+            face[l].push_back(SchemeWrapper::sexp2uint(SchemeWrapper::car(index)));
+            face[l].push_back(SchemeWrapper::sexp2uint(SchemeWrapper::cdr(index)));
           } else
-            face[l].push_back(scm_to_uint(index));
+            face[l].push_back(SchemeWrapper::sexp2uint(index));
         }
       }
     }
     for (size_t i = 0; i < n_vertices; ++i) {
-      SCM chamfer = scm_c_eval_string(("(chamfer " + std::to_string(i) + ")").c_str());
+      auto chamfer = SchemeWrapper::evaluateString("(chamfer " + std::to_string(i) + ")");
       chamfers[i].clear();
-      while (scm_null_p(chamfer) == SCM_BOOL_F) {
-        SCM index = scm_car(chamfer);
-        if (scm_is_pair(index)) {
-          chamfers[i].push_back(scm_to_uint(scm_cdr(index)));
-          chamfers[i].push_back(scm_to_uint(scm_car(index)));
+      while (!SchemeWrapper::isNull(chamfer)) {
+        auto index = SchemeWrapper::car(chamfer);
+        if (SchemeWrapper::isPair(index)) {
+          chamfers[i].push_back(SchemeWrapper::sexp2uint(SchemeWrapper::cdr(index)));
+          chamfers[i].push_back(SchemeWrapper::sexp2uint(SchemeWrapper::car(index)));
         } else
-          chamfers[i].push_back(scm_to_uint(index));
-        chamfer = scm_cdr(chamfer);
+          chamfers[i].push_back(SchemeWrapper::sexp2uint(index));
+        chamfer = SchemeWrapper::cdr(chamfer);
       }
     }
   }
@@ -474,17 +447,17 @@ bool PHGB::reload() {
   // Extract misc lines
   {
     misc_lines.clear();
-    SCM misc = scm_variable_ref(scm_c_lookup("misc-lines"));
-    while (scm_null_p(misc) == SCM_BOOL_F) {
-      SCM segment = scm_car(misc);
-      SCM sp = scm_car(segment), sq = scm_cdr(segment);
+    auto misc = SchemeWrapper::getVariable("misc-lines");
+    while (!SchemeWrapper::isNull(misc)) {
+      auto segment = SchemeWrapper::car(misc);
+      auto sp = SchemeWrapper::car(segment), sq = SchemeWrapper::cdr(segment);
       Vector p, q;
       for (size_t c = 0; c < 3; ++c) {
-        p[c] = scm_to_double(scm_list_ref(sp, scm_from_uint(c)));
-        q[c] = scm_to_double(scm_list_ref(sq, scm_from_uint(c)));
+        p[c] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(sp, c));
+        q[c] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(sq, c));
       }
       misc_lines.push_back({p, q});
-      misc = scm_cdr(misc);
+      misc = SchemeWrapper::cdr(misc);
     }
   }
 

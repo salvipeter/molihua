@@ -1,11 +1,10 @@
 #include <QtWidgets/QApplication>
 
-#include <libguile.h>
-
+#include "scheme-wrapper.hh"
 #include "window.hh"
 
 int main(int argc, char **argv) {
-  scm_init_guile();
+  SchemeWrapper::initialize();
   QApplication app(argc, argv);
   Window window(&app);
   window.show();

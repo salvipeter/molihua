@@ -1,3 +1,4 @@
+#include <QMessageBox>
 #include <QtGui/QKeyEvent>
 
 #include "ph-gb.hh"
@@ -119,10 +120,12 @@ bool Viewer::open(std::string filename) {
   return true;
 }
 
-void Viewer::reload() {
+bool Viewer::reload() {
   for (auto o : objects)
-    o->reload();
+    if (!o->reload())
+      return false;
   update();
+  return true;
 }
 
 void Viewer::init() {
@@ -292,7 +295,8 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
   if (e->modifiers() == Qt::NoModifier)
     switch (e->key()) {
     case Qt::Key_R:
-      reload();
+      if (!reload())
+        QMessageBox::critical(this, "Reload failed", "Error reloading file");
       break;
     case Qt::Key_O:
       if (camera()->type() == qglviewer::Camera::PERSPECTIVE)

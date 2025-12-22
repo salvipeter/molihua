@@ -37,7 +37,7 @@ public:
   std::vector<std::shared_ptr<Object>> getObjects() const;
 
 public slots:
-  void reload();
+  bool reload();
 
 signals:
   void startComputation(QString message);

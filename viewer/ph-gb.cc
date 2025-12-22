@@ -319,12 +319,17 @@ void PHGB::updateBaseMesh() {
 }
 
 bool PHGB::reload() {
-  auto cmd = std::string("(begin"
-                         "  (import (scheme base))"
-                         "  (guard (ex (else #f))"
-                         "    (load \"molihua.scm\")"
-                         "    (load-model \"") + filename + "\")"
-                         "    #t))";
+  auto cmd = std::string("(guard (ex (else"
+                         "             (display \"Error: \")"
+                         "             (display (error-object-message ex))"
+                         "             (newline)"
+                         "             (display \"Irritants: \")"
+                         "             (display (error-object-irritants ex))"
+                         "             (newline)"
+                         "             #f))"
+                         "  (load \"molihua.scm\")"
+                         "  (load-model \"") + filename + "\")"
+                         "  #t)";
   auto load_ok = SchemeWrapper::evaluateString(cmd);
   if (SchemeWrapper::isFalse(load_ok))
     return false;

@@ -23,6 +23,7 @@
 (define resolution 200)
 (define generate-model? #f)
 
+(import (scheme base))
 (load "molihua.scm")
 (load-model filename)
 

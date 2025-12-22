@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.20)
 project(viewer)
 
 option(WITH_JET_FITTING "Use jet fitting for normals" OFF)
+option(WITH_CHIBI_SCHEME "Use Chibi Scheme instead of Guile" OFF)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 set(OpenGL_GL_PREFERENCE LEGACY)
@@ -20,7 +21,11 @@ find_package(Triangle REQUIRED)
 find_package(CDGBS REQUIRED)
 find_package(PkgConfig REQUIRED)
 
-pkg_check_modules(GUILE REQUIRED guile-3.0)
+if(WITH_CHIBI_SCHEME)
+  pkg_check_modules(SCHEME REQUIRED chibi-scheme)
+else()
+  pkg_check_modules(SCHEME REQUIRED guile-3.0)
+endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -47,6 +52,10 @@ if(WITH_JET_FITTING)
   add_definitions(-DUSE_JET_FITTING)
 endif()
 
+if(WITH_CHIBI_SCHEME)
+  add_definitions(-DUSE_CHIBI_SCHEME)
+endif()
+
 include_directories(
   .
   ${CGAL_INCLUDE_DIRS}
@@ -59,7 +68,7 @@ include_directories(
   ${LIBGEOM_INCLUDE_DIR}
   ${TRIANGLE_INCLUDE_DIR}
   ${CDGBS_INCLUDE_DIR}
-  ${GUILE_INCLUDE_DIRS}
+  ${SCHEME_INCLUDE_DIRS}
   )
 
 add_executable(viewer WIN32
@@ -101,6 +110,6 @@ target_link_libraries(viewer PUBLIC
   ${LIBGEOM_LIBRARY}
   ${CDGBS_LIBRARY}
   ${Triangle_LIBRARY}
-  ${GUILE_LIBRARIES}
+  ${SCHEME_LIBRARIES}
   gmp
   )

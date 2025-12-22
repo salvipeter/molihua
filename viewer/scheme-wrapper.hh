@@ -1,22 +1,41 @@
 #pragma once
 
-#include <libguile.h>
+#include <string>
+
+#ifndef USE_CHIBI_SCHEME
+  #include <libguile.h>
+#else
+  #ifdef slots
+    #pragma push_macro("slots")
+    #undef slots
+    #define RESTORE_SLOTS
+  #endif
+  #include <chibi/eval.h>
+  #ifdef RESTORE_SLOTS
+    #pragma pop_macro("slots")
+    #undef RESTORE_SLOTS
+  #endif
+#endif
 
 namespace SchemeWrapper {
 
+#ifndef USE_CHIBI_SCHEME
   using Sexp = SCM;
+#else
+  using Sexp = sexp;
+#endif
 
   void initialize();
 
   void setVariable(std::string var, Sexp val);
   Sexp getVariable(std::string var);
 
-  bool isNull(Sexp sexp);
-  bool isPair(Sexp sexp);
-  bool isFalse(Sexp sexp);
+  bool isNull(Sexp s);
+  bool isPair(Sexp s);
+  bool isFalse(Sexp s);
 
-  unsigned int sexp2uint(Sexp sexp);
-  double sexp2double(Sexp sexp);
+  unsigned int sexp2uint(Sexp s);
+  double sexp2double(Sexp s);
   Sexp bool2sexp(bool b);
   Sexp uint2sexp(unsigned int n);
   Sexp double2sexp(double x);

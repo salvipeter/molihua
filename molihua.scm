@@ -28,24 +28,6 @@
 (define misc-lines #f)                  ; list of line segments to draw (for experimenting)
 
 
-;;; R7RS compatibility
-(cond-expand
-  (guile
-   (use-modules (ice-9 rdelim))         ; read-line
-   (define (vector-map f v)
-     (let ((len (vector-length v)))
-       (do ((result (make-vector len))
-            (i 0 (+ i 1)))
-           ((= i len) result)
-         (vector-set! result i (f (vector-ref v i))))))
-   (define (vector-for-each f v)
-     (let ((len (vector-length v)))
-       (do ((i 0 (+ i 1)))
-           ((= i len))
-         (f (vector-ref v i))))))
-  (gambit))
-
-
 ;;; General utilities
 
 (define-syntax bind-list
@@ -754,21 +736,11 @@
 ;;; Moves the adjacent face to the beginning
 ;;; Adjacency means that there is (u v) in one, and (v u) in the other
 (define (select-adjacent v face lst)
-  (define (face-with-vertex f)
-    (let ((lst (nested-ref faces f)))
-      (if (memq v lst)
-          lst
-          (let find ((hs holes))
-            (let ((h (car hs)))
-              (if (and (= (car h) f)
-                       (memq v (cdr h)))
-                  (cdr h)
-                  (find (cdr hs))))))))
   (let loop ((lst lst) (acc '()))
     (cond ((null? lst)
            (error "cannot find adjacent face"))
-          ((let ((a (face-with-vertex face))
-                 (b (face-with-vertex (car lst))))
+          ((let ((a (nested-ref faces face))
+                 (b (nested-ref faces (car lst))))
              (or (= (next-element a v) (prev-element b v))
                  (= (prev-element a v) (next-element b v))))
            (cons (car lst) (append acc (cdr lst))))

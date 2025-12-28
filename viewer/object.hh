@@ -15,6 +15,7 @@ public:
   virtual void updateBaseMesh();
   virtual bool reload() = 0;
   bool valid() const;
+  bool saveModel(std::string filename);
 protected:
   void updateBaseMesh(bool own_normal, bool own_curvature);
   virtual Vector normal(BaseMesh::VertexHandle vh) const;

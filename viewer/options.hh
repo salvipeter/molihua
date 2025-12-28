@@ -34,6 +34,7 @@ public slots:
   void bsplineConcaveChanged(Qt::CheckState state);
   void scalingChanged(Qt::CheckState state);
   void exportClicked();
+  void exportModelClicked();
 
 private slots:
   void updateDomain() const;

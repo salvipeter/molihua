@@ -201,6 +201,10 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   connect(exportButton, &QPushButton::clicked, this, &Options::exportClicked);
   miscLayout->addWidget(exportButton);
 
+  auto exportModelButton = new QPushButton("Export model");
+  connect(exportModelButton, &QPushButton::clicked, this, &Options::exportModelClicked);
+  miscLayout->addWidget(exportModelButton);
+
   setLayout(master);
 }
 
@@ -318,6 +322,21 @@ void Options::exportClicked() {
   // Export
   QString cmd = ("(write-patch-mgbs (vector-ref ribbons %1) \"" + name + "\")").arg(selected);
   SchemeWrapper::evaluateString(cmd.toUtf8().data());
+}
+
+void Options::exportModelClicked() {
+  if (viewer->getObjects().size() != 1)
+    return;
+
+  // Get a file name
+  auto name = QFileDialog::getSaveFileName(this, "Export Model", ".", "Meshes (*.obj)");
+  if (name.isEmpty())
+    return;
+  if (!name.endsWith(".obj"))
+    name += ".obj";
+
+  // Export
+  viewer->getObjects()[0]->saveModel(name.toUtf8().data());
 }
 
 void Options::updateDomain() const {

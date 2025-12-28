@@ -1,3 +1,5 @@
+#include <OpenMesh/Core/IO/MeshIO.hh>
+
 #include "object.hh"
 #include "scheme-wrapper.hh"
 
@@ -202,4 +204,8 @@ double Object::gaussCurvature(BaseMesh::VertexHandle vh) const {
 
 bool Object::valid() const {
   return mesh.n_vertices() > 0;
+}
+
+bool Object::saveModel(std::string filename) {
+  return OpenMesh::IO::write_mesh(mesh, filename);
 }

@@ -113,6 +113,7 @@ void PHGB::draw(const Visualization &vis) const {
       glEnd();
     }
     glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
     glEnable(GL_LIGHTING);
   }
 

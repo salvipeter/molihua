@@ -109,7 +109,6 @@ endif(UNIX)
 target_link_libraries(viewer PUBLIC
   ${OPENGL_LIBRARIES}
   Eigen3::Eigen
-  ${OPENMESH_LIBRARIES}
   Qt6::Core
   Qt6::OpenGL
   Qt6::OpenGLWidgets
@@ -118,6 +117,7 @@ target_link_libraries(viewer PUBLIC
   ${QGLVIEWER_LIBRARY}
   ${LIBGEOM_LIBRARY}
   ${CDGBS_LIBRARY}
+  ${OPENMESH_LIBRARIES}
   ${Triangle_LIBRARY}
   ${SCHEME_LIBRARIES}
   gmp

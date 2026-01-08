@@ -30,10 +30,24 @@
 
 ;;; General utilities
 
-(define-syntax bind-list
-  (syntax-rules ()
-    ((_ vars lst body ...)
-     (apply (lambda vars body ...) lst))))
+(cond-expand
+  ((or chibi gambit guile)
+   (define-syntax bind-list
+     (syntax-rules ()
+       ((_ vars lst body ...)
+        (apply (lambda vars body ...) lst)))))
+  (s7
+   (define-macro (bind-list vars lst . body)
+     `(apply (lambda ,vars ,@body) ,lst))))
+
+(cond-expand
+  (chibi
+   (define (with-output-to-string thunk)
+     (let ((out (open-output-string)))
+       (parameterize ((current-output-port out))
+         (thunk))
+       (get-output-string out))))
+  ((or gambit guile s7)))
 
 ;;; `x` is assumed to be in `lst`;
 ;;; this gives the next element (first if `x` is last)
@@ -326,17 +340,17 @@
                     (vector-ref ribbons i)))))))
 
 (define (knot-string degree with-size?)
-  (parameterize ((current-output-port (open-output-string)))
-    (when with-size?
-      (display (* (+ degree 1) 2))
-      (display " "))
-    (do ((i 0 (+ i 1)))
-        ((> i degree))
-      (display "0 "))
-    (do ((i 0 (+ i 1)))
-        ((= i degree) (display 1))
-      (display "1 "))
-    (get-output-string (current-output-port))))
+  (with-output-to-string
+    (lambda ()
+      (when with-size?
+        (display (* (+ degree 1) 2))
+        (display " "))
+      (do ((i 0 (+ i 1)))
+          ((> i degree))
+        (display "0 "))
+      (do ((i 0 (+ i 1)))
+          ((= i degree) (display 1))
+        (display "1 ")))))
 
 (define (write-patch-mgbs patch filename)
   (with-output-to-file filename
@@ -358,7 +372,6 @@
                                           (append (car ribbon) (cdr ribbon))))
                               loop))
                   patch)
-
         (display "400 200") (newline)))))
 
 (define (write-patches-mgbs filename-prefix)
@@ -869,23 +882,23 @@
         ;; 4. Translate offset vertices j and k by this vector
         ;; 5. Intersect the new j-k line by the j & k planes to get the new points
         (define (shrink-one! i j k)
-          (let* ((pi (list-ref points i))
+          (let* ((p-i (list-ref points i))
                  (pj (list-ref points j))
                  (pk (list-ref points k))
                  (plane (cons corner (list-ref normals i)))
                  (dir (cross-product (list-ref normals j) (list-ref normals k)))
                  (pj* (plane-line-intersection plane (cons pj (v+ pj dir))))
                  (pk* (plane-line-intersection plane (cons pk (v+ pk dir)))))
-            (when (same-side? (cons pj* pk*) pi corner)
+            (when (same-side? (cons pj* pk*) p-i corner)
               (let* ((t (vnormalize (v- pk* pj*)))
-                     (d (v- pi (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                     (d (v- p-i (v+ pk* (v* t (scalar-product t (v- p-i pk*))))))
                      (line (cons (v+ pj d) (v+ pk d)))
                      (qj (plane-line-intersection (poly->plane (list-ref polys j)) line))
                      (qk (plane-line-intersection (poly->plane (list-ref polys k)) line)))
                 (when shrink-inwards?
-                  (let ((pi* (v+ pk* (v* t (scalar-product t (v- pi pk*))))))
+                  (let ((pi* (v+ pk* (v* t (scalar-product t (v- p-i pk*))))))
                     (set-offset-line-by-vertex! (list-ref indices i)
-                                                (v+ pi (v* (v- pi* pi) shrink-inwards-scaling)))))
+                                                (v+ p-i (v* (v- pi* p-i) shrink-inwards-scaling)))))
                 (when (and qj qk shrink-outwards?)
                   (set-offset-line-by-vertex! (list-ref indices j) qj)
                   (set-offset-line-by-vertex! (list-ref indices k) qk))))))
@@ -932,6 +945,8 @@
         (/ (length flat)))))
 
 (define (update-chamfer-scalings)
+  (define (safe-/ a b)
+    (if (= b 0) a (/ b a)))             ; kutykurutty
   (define (update-scaling i s)
     (let ((old (vector-ref chamfer-max-scaling i)))
       (unless (and old (< old s))
@@ -962,8 +977,8 @@
                    (opp (find-opposite (cons i j) v0 c0 c1))
                    (e0 (v* (v+ o0 (select-offset car (common-element c0 opp))) 1/2))
                    (e1 (v* (v+ o1 (select-offset car (common-element c1 opp))) 1/2))
-                   (r0 (/ max-length (point-distance e0 m0)))
-                   (r1 (/ max-length (point-distance e1 m1))))
+                   (r0 (safe-/ max-length (point-distance e0 m0)))
+                   (r1 (safe-/ max-length (point-distance e1 m1))))
               (update-scaling v0 r0)
               (update-scaling v1 r1))))))))
 

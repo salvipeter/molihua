@@ -336,8 +336,9 @@ void PHGB::updateBaseMesh() {
 }
 
 bool PHGB::reload() {
-  auto cmd = std::string("(guard (ex (else"
-                         "             (display \"Error: \")"
+  auto cmd = std::string("(guard (ex ((eq? ex #t) #t)" // s7 passes also the result as ex
+                         "           (else"
+                         "             (display \"Error: \") (display ex) (display \" / \")"
                          "             (display (error-object-message ex))"
                          "             (newline)"
                          "             (display \"Irritants: \")"
@@ -348,6 +349,7 @@ bool PHGB::reload() {
                          "  (load-model \"") + filename + "\")"
                          "  #t)";
   auto load_ok = SchemeWrapper::evaluateString(cmd);
+
   if (SchemeWrapper::isFalse(load_ok))
     return false;
 

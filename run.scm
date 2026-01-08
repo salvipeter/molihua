@@ -21,9 +21,19 @@
 ;;; Output
 (define only-one-patch #f)
 (define resolution 200)
-(define generate-model? #f)
+(define generate-model? #t)
 
+;;; R7RS compatibility layer
+(cond-expand
+  ((or chibi gambit guile))
+  (s7 (load "r7rs.scm")))
+
+;;; Load basic libraries
 (import (scheme base))
+(cond-expand
+  (chibi (import (scheme cxr) (chibi process)))
+  ((or gambit guile s7)))
+
 (load "molihua.scm")
 (load-model filename)
 
@@ -37,8 +47,10 @@
 
 (define (shell cmd)
   (cond-expand
+    (chibi (system "sh" "-c" cmd))
+    (gambit (shell-command cmd))
     (guile (system cmd))
-    (gambit (shell-command cmd))))
+    (s7 (system cmd))))
 
 (when generate-model?
   (let ((indices (if only-one-patch

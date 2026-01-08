@@ -2,9 +2,11 @@
 
 #include <string>
 
-#ifndef USE_CHIBI_SCHEME
+#ifdef USE_GUILE_SCHEME
   #include <libguile.h>
-#else
+#elif defined(USE_S7_SCHEME)
+  #include <s7.h>
+#else // USE_CHIBI_SCHEME
   #ifdef slots
     #pragma push_macro("slots")
     #undef slots
@@ -19,9 +21,11 @@
 
 namespace SchemeWrapper {
 
-#ifndef USE_CHIBI_SCHEME
+#ifdef USE_GUILE_SCHEME
   using Sexp = SCM;
-#else
+#elif defined(USE_S7_SCHEME)
+  using Sexp = s7_pointer;
+#else // USE_CHIBI_SCHEME
   using Sexp = sexp;
 #endif
 

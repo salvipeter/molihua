@@ -251,6 +251,7 @@
               ((= i (vector-length vertices)))
             (write-chamfer i))))))
 
+;;; (vertices . faces), where both are defined similarly to the global variables of the same name
 (define (auxiliary-polyhedron)
   (define (get-chamfer-point f i j)
     (let ((p (list-ref (nested-ref offset-faces i) j)))
@@ -760,26 +761,27 @@
            (v+ (cross-product (caar lst) (cdar lst))
                (loop (cdr lst))))))))
 
+;;; Checks if the normal changes inside a polygon, i.e., a concave angle
+(define (twisted? lst)
+  (define (normal lst)
+    (vnormalize (cross-product (v- (list-ref lst 0) (list-ref lst 1))
+                               (v- (list-ref lst 2) (list-ref lst 1)))))
+  (let ((n (normal lst)))
+    (let loop ((lst (append (cdr lst) lst)))
+      (or (< (length lst) 3)
+          (and (>= (scalar-product (normal lst) n) 0)
+               (loop (cdr lst)))))))
+
 ;;; Returns the chamfer associated with the v-th vertex.
 ;;; The result is a list of indices to offset-vertices.
 (define (chamfer v)
-  (let* ((face-indices (vector-ref vertex-faces v))
-         (lst (map (lambda (f)
-                     (list-ref (nested-ref offset-faces f)
-                               (find-index v (nested-ref faces f))))
-                   face-indices))
-         (face (map (lambda (v) (vector-ref vertices v))
-                    (nested-ref faces (car face-indices))))
-         (chamfer-face (map (lambda (v)
-                              (if (pair? v)
-                                  (v* (v+ (vector-ref offset-vertices (car v))
-                                          (vector-ref offset-vertices (cdr v)))
-                                      1/2)
-                                  (vector-ref offset-vertices v)))
-                            lst)))
-    (if (< (scalar-product (face-normal face)
-                           (face-normal chamfer-face))
-           0)
+  (let ((lst (map (lambda (f)
+                    (list-ref (nested-ref offset-faces f)
+                              (find-index v (nested-ref faces f))))
+                  (vector-ref vertex-faces v))))
+    (if (twisted? (map (lambda (v)
+                         (vector-ref offset-vertices v))
+                       (flatten-pairs lst)))
         (reverse lst)
         lst)))
 

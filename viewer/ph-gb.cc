@@ -5,6 +5,11 @@
 #include "options.hh"
 #include "ph-gb.hh"
 #include "scheme-wrapper.hh"
+#include "triangulator.hh"
+
+namespace {
+  const double line_width = 3.0;
+}
 
 PHGB::PHGB(std::string filename) : Object(filename) {
   reload();
@@ -36,9 +41,9 @@ void PHGB::draw(const Visualization &vis) const {
   if (!SchemeWrapper::isFalse(onePatch))
     show_only = SchemeWrapper::sexp2uint(onePatch);
 
-  if (vis.show_cage) {
+  if (vis.cage == Visualization::CageType::NET) {
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0);
+    glLineWidth(line_width);
     glColor3d(0.3, 0.3, 1.0);
     for (auto f : cage.faces()) {
       glBegin(GL_LINE_LOOP);
@@ -48,11 +53,23 @@ void PHGB::draw(const Visualization &vis) const {
     }
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
+  } else if (vis.cage == Visualization::CageType::SURFACE) {
+    glColor3d(0.3, 0.7, 0.4);
+    for (auto f : cage_triangulated.triangles()) {
+      auto a = cage_triangulated[f[0]], b = cage_triangulated[f[1]], c = cage_triangulated[f[2]];
+      auto normal = ((b - a) ^ (c - a)).normalize();
+      glBegin(GL_POLYGON);
+      for (auto v : f) {
+        glNormal3dv(normal.data());
+        glVertex3dv(cage_triangulated[v].data());
+      }
+      glEnd();
+    }
   }
 
   if (vis.show_offsets) {
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0);
+    glLineWidth(line_width);
     glColor3d(1.0, 0.7, 0.0);
     for (size_t i = 0; i < offset_faces.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
@@ -101,7 +118,7 @@ void PHGB::draw(const Visualization &vis) const {
 
   if (vis.boundaries != Visualization::BoundaryType::NONE) {
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0);
+    glLineWidth(line_width);
     glColor3d(0.0, 0.7, 0.7);
     for (size_t i = 0; i < patches.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
@@ -135,7 +152,7 @@ void PHGB::draw(const Visualization &vis) const {
 
   if (vis.ribbons != Visualization::RibbonType::NONE) {
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0);
+    glLineWidth(line_width);
     for (size_t i = 0; i < patches.size(); ++i) {
       if (show_only > 0 && show_only - 1 != i)
         continue;
@@ -200,7 +217,7 @@ void PHGB::draw(const Visualization &vis) const {
 
   if (vis.show_misc_lines) {
     glDisable(GL_LIGHTING);
-    glLineWidth(3.0);
+    glLineWidth(line_width);
     glColor3d(0.0, 0.0, 0.0);
 
     glBegin(GL_LINES);
@@ -345,25 +362,32 @@ bool PHGB::reload() {
     n_vertices = SchemeWrapper::vectorLength(vertices);
     n_faces = SchemeWrapper::vectorLength(faces);
     std::vector<CageMesh::VertexHandle> handles;
+    cage_triangulated.resizePoints(n_vertices);
     for (size_t i = 0; i < n_vertices; ++i) {
       Vector p;
       auto lst = SchemeWrapper::vectorElement(vertices, i);
       for (size_t j = 0; j < 3; ++j)
         p[j] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(lst, j));
       handles.push_back(cage.add_vertex(p));
+      cage_triangulated[i] = Geometry::Point3D(p[0], p[1], p[2]);
     }
     for (size_t i = 0; i < n_faces; ++i) {
       auto loops = SchemeWrapper::vectorElement(faces, i);
       size_t m = SchemeWrapper::listLength(loops);
+      std::vector<std::vector<size_t>> to_triangulate(m);
       for (size_t l = 0; l < m; ++l) {
         auto lst = SchemeWrapper::listElement(loops, l);
         size_t n = SchemeWrapper::listLength(lst);
         std::vector<CageMesh::VertexHandle> face;
-        for (size_t j = 0; j < n; ++j)
-          face.push_back(handles[SchemeWrapper::sexp2uint(SchemeWrapper::listElement(lst, j))]);
+        for (size_t j = 0; j < n; ++j) {
+          auto index = SchemeWrapper::sexp2uint(SchemeWrapper::listElement(lst, j));
+          face.push_back(handles[index]);
+          to_triangulate[l].push_back(index);
+        }
         cage.add_face(face);
         face_indices.push_back(i);
       }
+      addTriangulatedFace(cage_triangulated, to_triangulate);
     }
   }
 

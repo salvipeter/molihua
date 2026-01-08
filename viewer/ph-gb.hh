@@ -4,6 +4,8 @@
 
 #include <OpenMesh/Core/Mesh/PolyMesh_ArrayKernelT.hh>
 
+#include <geometry.hh>
+
 #include <libcdgbs/Mesh.hpp>
 
 #include "object.hh"
@@ -33,4 +35,5 @@ private:
   std::vector<libcdgbs::Mesh> domains;
   std::vector<size_t> face_indices;
   std::vector<std::pair<Vector, Vector>> misc_lines;
+  Geometry::TriMesh cage_triangulated;
 };

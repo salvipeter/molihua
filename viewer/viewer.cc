@@ -336,7 +336,14 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       update();
       break;
     case Qt::Key_C:
-      vis.show_cage = !vis.show_cage;
+      switch (vis.cage) {
+      case Visualization::CageType::NONE:
+        vis.cage = Visualization::CageType::NET; break;
+      case Visualization::CageType::NET:
+        vis.cage = Visualization::CageType::SURFACE; break;
+      case Visualization::CageType::SURFACE:
+        vis.cage = Visualization::CageType::NONE; break;
+      }
       update();
       break;
     case Qt::Key_V:
@@ -459,9 +466,7 @@ void Viewer::mouseMoveEvent(QMouseEvent *e) {
 }
 
 QString Viewer::helpString() const {
-  QString text("<h2>Geometry Framework</h2>"
-               "<p>This is a minimal framework for 3D mesh manipulation, which can be "
-               "extended and used as a base for various geometry-relatedprojects.</p>"
+  QString text("<h2>Polyhedron-based Model Visualization</h2>"
                "<p>The following hotkeys are available:</p>"
                "<ul>"
                "<li>&nbsp;R: Reload model</li>"
@@ -476,11 +481,11 @@ QString Viewer::helpString() const {
                "<li>&nbsp;*: Set slicing direction to view</li></ul></li>"
                "<li>&nbsp;I: Set isophote line map</li>"
                "<li>&nbsp;E: Set environment texture</li>"
-               "<li>&nbsp;C: Toggle cage visualization</li>"
+               "<li>&nbsp;C: Toggle cage visualization (none / net / polyhedron)</li>"
                "<li>&nbsp;V: Toggle offset visualization</li>"
                "<li>&nbsp;F: Toggle chamfer visualization</li>"
                "<li>&nbsp;D: Toggle boundary visualization (none / CP / curve)</li>"
-               "<li>&nbsp;B: Toggle ribbon visualization (none / NET / surface)</li>"
+               "<li>&nbsp;B: Toggle ribbon visualization (none / net / surface)</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"
                "<li>&nbsp;K: Toggle miscellaneous lines</li>"

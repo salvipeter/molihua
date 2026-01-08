@@ -66,7 +66,7 @@ include_directories(
   ${Qt6Xml_INCLUDE_DIRS}
   ${QGLVIEWER_INCLUDE_DIR}
   ${LIBGEOM_INCLUDE_DIR}
-  ${TRIANGLE_INCLUDE_DIR}
+  ${Triangle_INCLUDE_DIR}
   ${CDGBS_INCLUDE_DIR}
   ${SCHEME_INCLUDE_DIRS}
   )
@@ -80,6 +80,7 @@ add_executable(viewer WIN32
   options.cc
   ph-gb.cc
   scheme-wrapper.cc
+  triangulator.cc
   viewer.cc
   visualization.cc
   window.cc

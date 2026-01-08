@@ -15,7 +15,7 @@
 ;   cubic-linear, cubic-linear-c0
 ; - quartic-simple, quartic-no-alpha, quartic-tomi-simple, quartic-tomi-no-alpha
 ; - quintic, quintic-tomi
-(define direction-blend-type 'cubic-tomi-simple)
+(define direction-blend-type 'magic)
 (define cubic-cross-degree? #t)
 
 ;;; Output

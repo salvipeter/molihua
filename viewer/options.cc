@@ -133,7 +133,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   dblendCombo->addItem("QuarticTomi - no alpha");
   dblendCombo->addItem("Quintic");
   dblendCombo->addItem("QuinticTomi");
-  dblendCombo->setCurrentIndex(5);
+  dblendCombo->setCurrentIndex(6);
   geometryLayout->addWidget(dblendCombo);
   connect(dblendCombo, &QComboBox::activated, this, &Options::dblendChanged);
   dblendChanged(dblendCombo->currentIndex());

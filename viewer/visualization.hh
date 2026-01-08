@@ -23,10 +23,11 @@ struct Visualization {
 
   // Flags
   VisType type;
-  bool show_solid, show_wireframe, show_offsets, show_chamfers, show_misc_lines;
+  bool show_solid, show_wireframe, show_offsets, show_misc_lines, show_auxiliary;
   enum class BoundaryType { NONE, CP, CURVE } boundaries;
   enum class RibbonType { NONE, NET, SURFACE } ribbons;
   enum class CageType { NONE, NET, SURFACE } cage;
+  enum class ChamferType { NONE, NET, SURFACE } chamfers;
 
   // Ribbon
   double ribbon_hmax;

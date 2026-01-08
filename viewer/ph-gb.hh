@@ -35,5 +35,5 @@ private:
   std::vector<libcdgbs::Mesh> domains;
   std::vector<size_t> face_indices;
   std::vector<std::pair<Vector, Vector>> misc_lines;
-  Geometry::TriMesh cage_triangulated;
+  Geometry::TriMesh cage_triangulated, auxiliary;
 };

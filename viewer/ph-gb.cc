@@ -67,6 +67,20 @@ void PHGB::draw(const Visualization &vis) const {
     }
   }
 
+  if (vis.show_auxiliary) {
+    glColor3d(0.0, 0.7, 0.8);
+    for (auto f : auxiliary.triangles()) {
+      auto a = auxiliary[f[0]], b = auxiliary[f[1]], c = auxiliary[f[2]];
+      auto normal = ((b - a) ^ (c - a)).normalize();
+      glBegin(GL_POLYGON);
+      for (auto v : f) {
+        glNormal3dv(normal.data());
+        glVertex3dv(auxiliary[v].data());
+      }
+      glEnd();
+    }
+  }
+
   if (vis.show_offsets) {
     glDisable(GL_LIGHTING);
     glLineWidth(line_width);
@@ -86,7 +100,7 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
-  if (vis.show_chamfers) {
+  if (vis.chamfers == Visualization::ChamferType::SURFACE) {
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
     glDisable(GL_LIGHTING);
     glEnable(GL_BLEND);
@@ -114,6 +128,32 @@ void PHGB::draw(const Visualization &vis) const {
     }
     glDisable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ZERO);
+    glEnable(GL_LIGHTING);
+  } else if (vis.chamfers == Visualization::ChamferType::NET) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(line_width);
+    glColor4d(1.0, 0.0, 0.7, 0.3);
+    auto n_chamfers = chamfers.size();
+    for (size_t i = 0; i < n_chamfers; ++i) {
+      bool skip = show_only > 0;
+      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
+        if (face_indices[j] != show_only - 1)
+          continue;
+        for (auto vh : cage.fv_range(cage.face_handle(j)))
+          if (vh.idx() == (int)i) {
+            skip = false;
+            break;
+          }
+      }
+      if (skip)
+        continue;
+      const auto &f = chamfers[i];
+      glBegin(GL_LINE_LOOP);
+      for (auto v : f)
+        glVertex3dv(offset_vertices[v].data());
+      glEnd();
+    }
+    glLineWidth(1.0);
     glEnable(GL_LIGHTING);
   }
 
@@ -490,6 +530,37 @@ bool PHGB::reload() {
       }
       misc_lines.push_back({p, q});
       misc = SchemeWrapper::cdr(misc);
+    }
+  }
+
+  // Extract auxiliary polyhedron
+  {
+    auto aux = SchemeWrapper::evaluateString("(auxiliary-polyhedron)");
+    auto vertices = SchemeWrapper::car(aux);
+    auto faces = SchemeWrapper::cdr(aux);
+    n_vertices = SchemeWrapper::vectorLength(vertices);
+    n_faces = SchemeWrapper::vectorLength(faces);
+    auxiliary.resizePoints(n_vertices);
+    for (size_t i = 0; i < n_vertices; ++i) {
+      Vector p;
+      auto lst = SchemeWrapper::vectorElement(vertices, i);
+      for (size_t j = 0; j < 3; ++j)
+        p[j] = SchemeWrapper::sexp2double(SchemeWrapper::listElement(lst, j));
+      auxiliary[i] = Geometry::Point3D(p[0], p[1], p[2]);
+    }
+    for (size_t i = 0; i < n_faces; ++i) {
+      auto loops = SchemeWrapper::vectorElement(faces, i);
+      size_t m = SchemeWrapper::listLength(loops);
+      std::vector<std::vector<size_t>> to_triangulate(m);
+      for (size_t l = 0; l < m; ++l) {
+        auto lst = SchemeWrapper::listElement(loops, l);
+        size_t n = SchemeWrapper::listLength(lst);
+        for (size_t j = 0; j < n; ++j) {
+          auto index = SchemeWrapper::sexp2uint(SchemeWrapper::listElement(lst, j));
+          to_triangulate[l].push_back(index);
+        }
+      }
+      addTriangulatedFace(auxiliary, to_triangulate);
     }
   }
 

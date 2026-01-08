@@ -70,8 +70,16 @@ void addTriangulatedFace(TriMesh &mesh, const std::vector<std::vector<size_t>> &
   out.segmentlist = nullptr;
   out.segmentmarkerlist = nullptr;
 
-  triangulate(const_cast<char *>("pBPYYzQ"), &in, &out, (struct triangulateio *)nullptr);
+  triangulate(const_cast<char *>("QpzYD"), &in, &out, (struct triangulateio *)nullptr);
 
+  if (out.numberofpoints > n) {
+    auto k = mesh.points().size();
+    mesh.resizePoints(k + out.numberofpoints - n);
+    for (int i = n; i < out.numberofpoints; ++i) {
+      reverse_map[i] = k;
+      mesh[k++] = origin + u * out.pointlist[2*i] + v * out.pointlist[2*i+1];
+    }
+  }
   for (int i = 0; i < out.numberoftriangles; ++i)
     mesh.addTriangle(reverse_map.at(out.trianglelist[3*i]),
                      reverse_map.at(out.trianglelist[3*i+1]),

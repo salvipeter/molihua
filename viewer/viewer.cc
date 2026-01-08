@@ -350,8 +350,19 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       vis.show_offsets = !vis.show_offsets;
       update();
       break;
+    case Qt::Key_A:
+      vis.show_auxiliary = !vis.show_auxiliary;
+      update();
+      break;
     case Qt::Key_F:
-      vis.show_chamfers = !vis.show_chamfers;
+      switch (vis.chamfers) {
+      case Visualization::ChamferType::NONE:
+        vis.chamfers = Visualization::ChamferType::NET; break;
+      case Visualization::ChamferType::NET:
+        vis.chamfers = Visualization::ChamferType::SURFACE; break;
+      case Visualization::ChamferType::SURFACE:
+        vis.chamfers = Visualization::ChamferType::NONE; break;
+      }
       update();
       break;
     case Qt::Key_D:
@@ -482,8 +493,9 @@ QString Viewer::helpString() const {
                "<li>&nbsp;I: Set isophote line map</li>"
                "<li>&nbsp;E: Set environment texture</li>"
                "<li>&nbsp;C: Toggle cage visualization (none / net / polyhedron)</li>"
+               "<li>&nbsp;A: Toggle auxiliary polyhedron visualization</li>"
                "<li>&nbsp;V: Toggle offset visualization</li>"
-               "<li>&nbsp;F: Toggle chamfer visualization</li>"
+               "<li>&nbsp;F: Toggle chamfer visualization (none / net / surface)</li>"
                "<li>&nbsp;D: Toggle boundary visualization (none / CP / curve)</li>"
                "<li>&nbsp;B: Toggle ribbon visualization (none / net / surface)</li>"
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"

@@ -251,35 +251,20 @@
               ((= i (vector-length vertices)))
             (write-chamfer i))))))
 
-(define (write-polyhedron filename)
+(define (auxiliary-polyhedron)
   (define (get-chamfer-point f i j)
     (let ((p (list-ref (nested-ref offset-faces i) j)))
       (if (pair? p) (f p) p)))
-  (define (write-loop loop)
-    (cond ((number? loop)
-           (display "#h ")
-           (display loop))
-          (else
-           (display "f")
-           (for-each (lambda (v)
-                       (cond ((pair? v)
-                              (display " ")
-                              (display (+ (car v) 1))
-                              (display " ")
-                              (display (+ (cdr v) 1)))
-                             (else
-                              (display " ")
-                              (display (+ v 1)))))
-                     loop)))
-    (newline))
-  (let ((loops '()))
+  (let ((aux-faces '()))
     (do ((i 0 (+ i 1)))
         ((= i (vector-length vertices)))
-      (set! loops (cons (reverse-pairs (chamfer i)) loops)))
+      (set! aux-faces
+        (cons (list (flatten-pairs (reverse-pairs (chamfer i))))
+              aux-faces)))
     (vector-for-each (lambda (face)
-                       (set! loops (append face loops))
-                       (when (> (length face) 1)
-                         (set-cdr! loops (cons (- (length face) 1) (cdr loops)))))
+                       (set! aux-faces
+                         (cons (map flatten-pairs face)
+                               aux-faces)))
                      offset-faces)
     (do ((i 0 (+ i 1)))
         ((= i (vector-length faces)))
@@ -299,11 +284,8 @@
                      (p2 (get-chamfer-point cdr (car opp) (cdr opp)))
                      (p3 (get-chamfer-point car (car opp) k2)))
                 (when (< (caar index) (caar opp))
-                  (set! loops (cons (list p3 p2 p1 p0) loops)))))))))
-    (with-output-to-file filename
-      (lambda ()
-        (vector-for-each write-vertex offset-vertices)
-        (for-each write-loop loops)))))
+                  (set! aux-faces (cons (list (list p3 p2 p1 p0)) aux-faces)))))))))
+    (cons offset-vertices (list->vector aux-faces))))
 
 ;;; Show ribbon in Obj format;
 ;;; index is the number of already printed vertices.

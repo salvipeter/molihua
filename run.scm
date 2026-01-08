@@ -40,7 +40,6 @@
 (write-offsets "/tmp/offsets.obj")
 (write-chamfers "/tmp/chamfers.obj")
 (write-controls "/tmp/controls.obj")
-(write-polyhedron "/tmp/polyhedron.obj")
 (write-patches-mgbs "/tmp/patch-")
 
 

@@ -458,6 +458,30 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       vis.slicing_dir = Vector(static_cast<double *>(camera()->viewDirection()));
       update();
       break;
+    default:
+      QGLViewer::keyPressEvent(e);
+    } else if (e->modifiers() == Qt::ShiftModifier)
+    switch (e->key()) {
+    case Qt::Key_X:
+      camera()->setViewDirection(qglviewer::Vec(-1.0, 0.0, 0.0));
+      camera()->setUpVector(qglviewer::Vec(0.0, 1.0, 0.0));
+      camera()->showEntireScene();
+      update();
+      break;
+    case Qt::Key_Y:
+      camera()->setViewDirection(qglviewer::Vec(0.0, -1.0, 0.0));
+      camera()->setUpVector(qglviewer::Vec(0.0, 0.0, 1.0));
+      camera()->showEntireScene();
+      update();
+      break;
+    case Qt::Key_Z:
+      camera()->setViewDirection(qglviewer::Vec(0.0, 0.0, -1.0));
+      camera()->setUpVector(qglviewer::Vec(1.0, 0.0, 0.0));
+      camera()->showEntireScene();
+      update();
+      break;
+    default:
+      QGLViewer::keyPressEvent(e);
     } else
     QGLViewer::keyPressEvent(e);
 }
@@ -526,7 +550,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;S: Toggle solid (filled polygon) visualization</li>"
                "<li>&nbsp;W: Toggle wireframe visualization</li>"
                "<li>&nbsp;K: Toggle miscellaneous lines</li>"
-               "<li>&nbsp;X/Y/Z: Set standard view direction</li>"
+               "<li>&nbsp;[Shift + ] X/Y/Z: Set standard view directions</li>"
                "<li>&nbsp;?: This help</li>"
                "</ul>"
                "<p align=\"right\">Peter Salvi</p>");

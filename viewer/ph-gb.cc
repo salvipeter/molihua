@@ -34,8 +34,6 @@ static void bernstein(size_t n, double u, std::vector<double> &coeff) {
 }
 
 void PHGB::draw(const Visualization &vis) const {
-  Object::draw(vis);
-
   auto onePatch = SchemeWrapper::getVariable("only-one-patch");
   size_t show_only = 0;
   if (!SchemeWrapper::isFalse(onePatch))
@@ -272,6 +270,7 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
+  Object::draw(vis);
 }
 
 void PHGB::drawWithNames(const Visualization &vis) const {

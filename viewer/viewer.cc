@@ -427,11 +427,17 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
   else if (e->modifiers() == Qt::KeypadModifier)
     switch (e->key()) {
     case Qt::Key_Plus:
-      vis.slicing_scaling *= 2;
+      if (vis.transparent)
+        vis.transparency = std::clamp(vis.transparency - 0.1, 0.0, 1.0);
+      else
+        vis.slicing_scaling *= 2;
       update();
       break;
     case Qt::Key_Minus:
-      vis.slicing_scaling /= 2;
+      if (vis.transparent)
+        vis.transparency = std::clamp(vis.transparency + 0.1, 0.0, 1.0);
+      else
+        vis.slicing_scaling /= 2;
       update();
       break;
     case Qt::Key_Asterisk:
@@ -492,8 +498,8 @@ QString Viewer::helpString() const {
                "<li>&nbsp;M: Set mean curvature map</li>"
                "<li>&nbsp;G: Set Gaussian curvature map</li>"
                "<li>&nbsp;L: Set slicing map<ul>"
-               "<li>&nbsp;+: Increase slicing density</li>"
-               "<li>&nbsp;-: Decrease slicing density</li>"
+               "<li>&nbsp;+: Increase slicing density / transparency</li>"
+               "<li>&nbsp;-: Decrease slicing density / transparency</li>"
                "<li>&nbsp;*: Set slicing direction to view</li></ul></li>"
                "<li>&nbsp;I: Set isophote line map</li>"
                "<li>&nbsp;E: Set environment texture</li>"

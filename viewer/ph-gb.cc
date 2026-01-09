@@ -39,19 +39,8 @@ void PHGB::draw(const Visualization &vis) const {
   if (!SchemeWrapper::isFalse(onePatch))
     show_only = SchemeWrapper::sexp2uint(onePatch);
 
-  if (vis.cage == Visualization::CageType::NET) {
-    glDisable(GL_LIGHTING);
-    glLineWidth(line_width);
-    glColor3d(0.3, 0.3, 1.0);
-    for (auto f : cage.faces()) {
-      glBegin(GL_LINE_LOOP);
-      for (auto v : f.vertices())
-        glVertex3dv(cage.point(v).data());
-      glEnd();
-    }
-    glLineWidth(1.0);
-    glEnable(GL_LIGHTING);
-  } else if (vis.cage == Visualization::CageType::SURFACE) {
+  if (vis.cage == Visualization::CageType::SURFACE ||
+      vis.cage == Visualization::CageType::NETSURFACE) {
     glColor3d(0.3, 0.7, 0.4);
     for (auto f : cage_triangulated.triangles()) {
       auto a = cage_triangulated[f[0]], b = cage_triangulated[f[1]], c = cage_triangulated[f[2]];
@@ -63,6 +52,20 @@ void PHGB::draw(const Visualization &vis) const {
       }
       glEnd();
     }
+  }
+  if (vis.cage == Visualization::CageType::NET ||
+      vis.cage == Visualization::CageType::NETSURFACE) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(line_width);
+    glColor3d(0.3, 0.3, 1.0);
+    for (auto f : cage.faces()) {
+      glBegin(GL_LINE_LOOP);
+      for (auto v : f.vertices())
+        glVertex3dv(cage.point(v).data());
+      glEnd();
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
   }
 
   if (vis.show_auxiliary) {

@@ -26,7 +26,7 @@ struct Visualization {
   bool show_solid, show_wireframe, show_offsets, show_misc_lines, show_auxiliary, transparent;
   enum class BoundaryType { NONE, CP, CURVE } boundaries;
   enum class RibbonType { NONE, NET, SURFACE } ribbons;
-  enum class CageType { NONE, NET, SURFACE } cage;
+  enum class CageType { NONE, NET, SURFACE, NETSURFACE } cage;
   enum class ChamferType { NONE, NET, SURFACE } chamfers;
 
   // Ribbon

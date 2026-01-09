@@ -342,6 +342,8 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       case Visualization::CageType::NET:
         vis.cage = Visualization::CageType::SURFACE; break;
       case Visualization::CageType::SURFACE:
+        vis.cage = Visualization::CageType::NETSURFACE; break;
+      case Visualization::CageType::NETSURFACE:
         vis.cage = Visualization::CageType::NONE; break;
       }
       update();
@@ -541,7 +543,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;*: Set slicing direction to view</li></ul></li>"
                "<li>&nbsp;I: Set isophote line map</li>"
                "<li>&nbsp;E: Set environment texture</li>"
-               "<li>&nbsp;C: Toggle cage visualization (none / net / polyhedron)</li>"
+               "<li>&nbsp;C: Toggle cage visualization (none / net / polyhedron / both)</li>"
                "<li>&nbsp;A: Toggle auxiliary polyhedron visualization</li>"
                "<li>&nbsp;V: Toggle offset visualization</li>"
                "<li>&nbsp;F: Toggle chamfer visualization (none / net / surface)</li>"

@@ -421,6 +421,20 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       camera()->showEntireScene();
       update();
       break;
+    case Qt::Key_Equal:
+      if (vis.transparent)
+        vis.transparency = std::clamp(vis.transparency - 0.1, 0.0, 1.0);
+      else
+        vis.slicing_scaling *= 2;
+      update();
+      break;
+    case Qt::Key_Minus:
+      if (vis.transparent)
+        vis.transparency = std::clamp(vis.transparency + 0.1, 0.0, 1.0);
+      else
+        vis.slicing_scaling /= 2;
+      update();
+      break;
     default:
       QGLViewer::keyPressEvent(e);
     }

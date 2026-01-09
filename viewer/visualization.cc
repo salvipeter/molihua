@@ -3,12 +3,13 @@
 Visualization::Visualization() :
   type(VisType::PLAIN),
   show_solid(true), show_wireframe(false), show_offsets(false), show_misc_lines(false),
-  show_auxiliary(false), boundaries(BoundaryType::NONE), ribbons(RibbonType::NONE),
+  show_auxiliary(false), transparent(false),
+  boundaries(BoundaryType::NONE), ribbons(RibbonType::NONE),
   cage(CageType::NET), chamfers(ChamferType::NONE),
   ribbon_hmax(1.0), ribbon_sres(10), ribbon_hres(5),
   mean_min(0.0), mean_max(0.0), mean_cutoff_ratio(0.05),
   gauss_min(0.0), gauss_max(0.0), gauss_cutoff_ratio(0.05),
-  slicing_dir(0, 0, 1), slicing_scaling(1)
+  slicing_dir(0, 0, 1), slicing_scaling(1), transparency(0.5)
 {
 }
 

@@ -33,10 +33,17 @@ void Object::draw(const Visualization &vis) const {
   glEnable(GL_POLYGON_OFFSET_FILL);
   glPolygonOffset(1, 1);
 
+  double alpha = 1.0;
+  if (vis.show_solid && vis.transparent) {
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glDepthMask(GL_FALSE);
+    alpha = vis.transparency;
+  }
+
   if (vis.show_solid || vis.show_wireframe) {
-    if (vis.type == VisType::PLAIN)
-      glColor3d(0.745, 0.784, 0.824); // muted blue-gray (recommended by ChatGPT...)
-    else if (vis.type == VisType::ISOPHOTES) {
+    if (vis.type == VisType::ISOPHOTES) {
       glBindTexture(GL_TEXTURE_2D, vis.current_isophote_texture);
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL);
       glEnable(GL_TEXTURE_2D);
@@ -54,12 +61,14 @@ void Object::draw(const Visualization &vis) const {
         continue;
       glBegin(GL_POLYGON);
       for (auto v : f.vertices()) {
+        Vector color(0.745, 0.784, 0.824);
         if (vis.type == VisType::MEAN)
-          glColor3dv(vis.colorMap(vis.mean_min, vis.mean_max, mesh.data(v).mean).data());
+          color = vis.colorMap(vis.mean_min, vis.mean_max, mesh.data(v).mean);
         else if (vis.type == VisType::GAUSS)
-          glColor3dv(vis.colorMap(vis.gauss_min, vis.gauss_max, mesh.data(v).gauss).data());
+          color = vis.colorMap(vis.gauss_min, vis.gauss_max, mesh.data(v).gauss);
         else if (vis.type == VisType::SLICING)
           glTexCoord1d(mesh.point(v) | vis.slicing_dir * vis.slicing_scaling);
+        glColor4d(color[0], color[1], color[2], alpha);
         glNormal3dv(mesh.normal(v).data());
         glVertex3dv(mesh.point(v).data());
       }
@@ -72,6 +81,13 @@ void Object::draw(const Visualization &vis) const {
       glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
     } else if (vis.type == VisType::SLICING)
       glDisable(GL_TEXTURE_1D);
+  }
+
+  if (vis.transparent) {
+    glEnable(GL_LIGHTING);
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glDepthMask(GL_TRUE);
   }
 
   if (vis.show_solid && vis.show_wireframe) {

@@ -399,6 +399,10 @@ void Viewer::keyPressEvent(QKeyEvent *e) {
       vis.show_wireframe = !vis.show_wireframe;
       update();
       break;
+    case Qt::Key_T:
+      vis.transparent = !vis.transparent;
+      update();
+      break;
     case Qt::Key_X:
       camera()->setViewDirection(qglviewer::Vec(1.0, 0.0, 0.0));
       camera()->setUpVector(qglviewer::Vec(0.0, 1.0, 0.0));
@@ -483,6 +487,7 @@ QString Viewer::helpString() const {
                "<li>&nbsp;R: Reload model</li>"
                "<li>&nbsp;O: Toggle orthographic projection</li>"
                "<li>&nbsp;H: Toggle white background</li>"
+               "<li>&nbsp;T: Toggle surface transparency</li>"
                "<li>&nbsp;P: Set plain map (no coloring)</li>"
                "<li>&nbsp;M: Set mean curvature map</li>"
                "<li>&nbsp;G: Set Gaussian curvature map</li>"

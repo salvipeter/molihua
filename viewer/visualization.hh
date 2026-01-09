@@ -23,7 +23,7 @@ struct Visualization {
 
   // Flags
   VisType type;
-  bool show_solid, show_wireframe, show_offsets, show_misc_lines, show_auxiliary;
+  bool show_solid, show_wireframe, show_offsets, show_misc_lines, show_auxiliary, transparent;
   enum class BoundaryType { NONE, CP, CURVE } boundaries;
   enum class RibbonType { NONE, NET, SURFACE } ribbons;
   enum class CageType { NONE, NET, SURFACE } cage;
@@ -45,6 +45,9 @@ struct Visualization {
   // Textures
   static GLuint isophote_texture, environment_texture, slicing_texture;
   GLuint current_isophote_texture;
+
+  // Transparency
+  double transparency;
 
   // Utilities
   static Vector HSV2RGB(Vector hsv);

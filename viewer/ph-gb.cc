@@ -8,7 +8,7 @@
 #include "triangulator.hh"
 
 namespace {
-  const double line_width = 3.0;
+  const double line_width = 4.0;
 }
 
 PHGB::PHGB(std::string filename) : Object(filename) {
@@ -34,6 +34,9 @@ static void bernstein(size_t n, double u, std::vector<double> &coeff) {
 }
 
 void PHGB::draw(const Visualization &vis) const {
+  if (!vis.transparent)
+    Object::draw(vis);
+
   auto onePatch = SchemeWrapper::getVariable("only-one-patch");
   size_t show_only = 0;
   if (!SchemeWrapper::isFalse(onePatch))
@@ -96,63 +99,6 @@ void PHGB::draw(const Visualization &vis) const {
           glVertex3dv(offset_vertices[v].data());
         glEnd();
       }
-    }
-    glLineWidth(1.0);
-    glEnable(GL_LIGHTING);
-  }
-
-  if (vis.chamfers == Visualization::ChamferType::SURFACE) {
-    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-    glDisable(GL_LIGHTING);
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4d(1.0, 0.0, 0.7, 0.3);
-    auto n_chamfers = chamfers.size();
-    for (size_t i = 0; i < n_chamfers; ++i) {
-      bool skip = show_only > 0;
-      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
-        if (face_indices[j] != show_only - 1)
-          continue;
-        for (auto vh : cage.fv_range(cage.face_handle(j)))
-          if (vh.idx() == (int)i) {
-            skip = false;
-            break;
-          }
-      }
-      if (skip)
-        continue;
-      const auto &f = chamfers[i];
-      glBegin(GL_POLYGON);
-      for (auto v : f)
-        glVertex3dv(offset_vertices[v].data());
-      glEnd();
-    }
-    glDisable(GL_BLEND);
-    glBlendFunc(GL_ONE, GL_ZERO);
-    glEnable(GL_LIGHTING);
-  } else if (vis.chamfers == Visualization::ChamferType::NET) {
-    glDisable(GL_LIGHTING);
-    glLineWidth(line_width);
-    glColor4d(1.0, 0.0, 0.7, 0.3);
-    auto n_chamfers = chamfers.size();
-    for (size_t i = 0; i < n_chamfers; ++i) {
-      bool skip = show_only > 0;
-      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
-        if (face_indices[j] != show_only - 1)
-          continue;
-        for (auto vh : cage.fv_range(cage.face_handle(j)))
-          if (vh.idx() == (int)i) {
-            skip = false;
-            break;
-          }
-      }
-      if (skip)
-        continue;
-      const auto &f = chamfers[i];
-      glBegin(GL_LINE_LOOP);
-      for (auto v : f)
-        glVertex3dv(offset_vertices[v].data());
-      glEnd();
     }
     glLineWidth(1.0);
     glEnable(GL_LIGHTING);
@@ -257,6 +203,63 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
+  if (vis.chamfers == Visualization::ChamferType::SURFACE) {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glDisable(GL_LIGHTING);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glColor4d(1.0, 0.0, 0.7, 0.5);
+    auto n_chamfers = chamfers.size();
+    for (size_t i = 0; i < n_chamfers; ++i) {
+      bool skip = show_only > 0;
+      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
+        if (face_indices[j] != show_only - 1)
+          continue;
+        for (auto vh : cage.fv_range(cage.face_handle(j)))
+          if (vh.idx() == (int)i) {
+            skip = false;
+            break;
+          }
+      }
+      if (skip)
+        continue;
+      const auto &f = chamfers[i];
+      glBegin(GL_POLYGON);
+      for (auto v : f)
+        glVertex3dv(offset_vertices[v].data());
+      glEnd();
+    }
+    glDisable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ZERO);
+    glEnable(GL_LIGHTING);
+  } else if (vis.chamfers == Visualization::ChamferType::NET) {
+    glDisable(GL_LIGHTING);
+    glLineWidth(line_width);
+    glColor3d(1.0, 0.0, 0.7);
+    auto n_chamfers = chamfers.size();
+    for (size_t i = 0; i < n_chamfers; ++i) {
+      bool skip = show_only > 0;
+      for (size_t j = 0; skip && j < face_indices.size(); ++j) {
+        if (face_indices[j] != show_only - 1)
+          continue;
+        for (auto vh : cage.fv_range(cage.face_handle(j)))
+          if (vh.idx() == (int)i) {
+            skip = false;
+            break;
+          }
+      }
+      if (skip)
+        continue;
+      const auto &f = chamfers[i];
+      glBegin(GL_LINE_LOOP);
+      for (auto v : f)
+        glVertex3dv(offset_vertices[v].data());
+      glEnd();
+    }
+    glLineWidth(1.0);
+    glEnable(GL_LIGHTING);
+  }
+
   if (vis.show_misc_lines) {
     glDisable(GL_LIGHTING);
     glLineWidth(line_width);
@@ -273,7 +276,8 @@ void PHGB::draw(const Visualization &vis) const {
     glEnable(GL_LIGHTING);
   }
 
-  Object::draw(vis);
+  if (vis.transparent)
+    Object::draw(vis);
 }
 
 void PHGB::drawWithNames(const Visualization &vis) const {

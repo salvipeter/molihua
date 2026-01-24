@@ -173,7 +173,7 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   mergeC1Check = new QCheckBox("C1 ribbon inner merge");
-  mergeC1Check->setChecked(true);
+  mergeC1Check->setChecked(false);
   geometryLayout->addWidget(mergeC1Check);
   connect(mergeC1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 

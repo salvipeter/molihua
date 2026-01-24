@@ -7,6 +7,8 @@
 (define new-tangent-setting? #f)        ; use the new tangent concept
 (define tangent-scaling-everywhere? #f) ; when #f tangent scaling is applied only on triangles
 (define magic-constant 4/5)             ; scaling of triangle end-cross-derivatives
+(define scale-hole-ribbons? #f)         ; when #t hole ribbons are scaled (only in magic mode!)
+(define hole-ribbon-scaling 1/2)        ; ... by this constant
 
 
 ;;; Global variables
@@ -1132,13 +1134,13 @@
           (map (lambda (p q) (v+ p q))
                (list P0 P1 P2 P3) (list Q0 Q1 Q2 Q3)))))
 
-(define (direction-blend-cubic-tomi r1 r2)
+(define (direction-blend-cubic-tomi r1 r2 _)
   (cons (car r1)
         (map (lambda (p q1 q2)
                (v+ p (v* (v- q1 q2) 1/2)))
              (car r1) (cdr r1) (reverse (cdr r2)))))
 
-(define (direction-blend-cubic-peti r1 r2)
+(define (direction-blend-cubic-peti r1 r2 _)
   (cons (car r1)
         (map (lambda (p q1 q2)
                (let ((c (scalar-product (vnormalize (v- q1 p))
@@ -1160,20 +1162,21 @@
               c
               (loop (+ i 1)))))))
 
-(define (direction-blend-magic r1 r2)
+(define (direction-blend-magic r1 r2 hole?)
   (define (get-scaling p)
     (if (= (length (flatten-pairs (find-chamfer-with-midpoint p))) 3)
         magic-constant
         1/2))
   (let* ((left (get-scaling (caar r1)))
-         (right (get-scaling (caar r2))))
+         (right (get-scaling (caar r2)))
+         (hole-scaling (if (and scale-hole-ribbons? hole?) hole-ribbon-scaling 1)))
     (cons (car r1)
                 (map (lambda (p q1 q2 s)
-                       (v+ p (v* (v- q1 q2) s)))
+                       (v+ p (v* (v- q1 q2) s hole-scaling)))
                      (car r1) (cdr r1) (reverse (cdr r2))
                      `(,left 1/2 1/2 ,right)))))
 
-(define (direction-blend-cubic-linear r1 r2)
+(define (direction-blend-cubic-linear r1 r2 _)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
       (let* ((left (v- P11 P10))
@@ -1186,7 +1189,7 @@
                      (v+ p q))
                    (car r1) (elevate quadratic)))))))
 
-(define (direction-blend-cubic-linear-c0 r1 r2)
+(define (direction-blend-cubic-linear-c0 r1 r2 _)
   (define (scale p q1 q2)
     (let ((c (scalar-product (vnormalize (v- q1 p)) (vnormalize (v- q2 p)))))
       (if (< c -0.99) 1/2 1)))
@@ -1214,7 +1217,7 @@
                       cpts)
                 (cdr lst))))))
 
-(define (direction-blend-quartic r1 r2)
+(define (direction-blend-quartic r1 r2 _)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
       (bind-list (P0-1 P1-1 P2-1 P3-1) (cdr r2)
@@ -1248,7 +1251,7 @@
                   (map (lambda (p q) (v+ p (v* q scale/d)))
                        quartic (list Q0 Q1 Q2 Q3 Q4)))))))))
 
-(define (direction-blend-quartic-tomi r1 r2)
+(define (direction-blend-quartic-tomi r1 r2 _)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
       (bind-list (P0-1 P1-1 P2-1 P3-1) (cdr r2)
@@ -1283,7 +1286,7 @@
                   (map (lambda (p q) (v+ p (v* q scale/d)))
                        quartic (list Q0 Q1 Q2 Q3 Q4)))))))))
 
-(define (direction-blend-quintic r1 r2)
+(define (direction-blend-quintic r1 r2 _)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
       (bind-list (P0-1 P1-1 P2-1 P3-1) (cdr r2)
@@ -1343,7 +1346,7 @@
                   (map (lambda (p q) (v+ p (v* q scale/d)))
                        quintic (list Q0 Q1 Q2 Q3 Q4 Q5)))))))))
 
-(define (direction-blend-quintic-tomi r1 r2)
+(define (direction-blend-quintic-tomi r1 r2 _)
   (bind-list (P00 P10 P20 P30) (car r1)
     (bind-list (P01 P11 P21 P31) (cdr r1)
       (bind-list (P0-1 P1-1 P2-1 P3-1) (cdr r2)
@@ -1424,9 +1427,9 @@
                              direction-blend-quartic-tomi)
                             ((quintic) direction-blend-quintic)
                             ((quintic-tomi) direction-blend-quintic-tomi)
-                            ((none) (lambda (x y) x))
+                            ((none) (lambda (r1 r2 h?) r1))
                             (else direction-blend))
-                          ribbon opp-ribbon)))
+                          ribbon opp-ribbon (> l 0))))
                      face-ribbons (range 0 (length face-ribbons))))
               loops (range 0 (length loops))))))))
 

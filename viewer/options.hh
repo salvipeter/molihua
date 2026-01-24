@@ -17,6 +17,7 @@ public:
   double scaling() const;
   bool hsplit() const;
   bool C1() const;
+  bool mergeC1() const;
   bool biharmonic() const;
   bool hWidth() const;
 
@@ -52,5 +53,5 @@ private:
   QSpinBox *selectedBox;
   QCheckBox *bsplineConcaveCheck;
   QDoubleSpinBox *reparamBox, *scalingBox;
-  QCheckBox *hsplitCheck, *C1Check, *biharmonicCheck, *hwidthCheck, *scalingCheck;
+  QCheckBox *hsplitCheck, *C1Check, *mergeC1Check, *biharmonicCheck, *hwidthCheck, *scalingCheck;
 };

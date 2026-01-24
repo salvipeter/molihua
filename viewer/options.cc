@@ -22,6 +22,10 @@ bool Options::C1() const {
   return C1Check->checkState() == Qt::Checked;
 }
 
+bool Options::mergeC1() const {
+  return mergeC1Check->checkState() == Qt::Checked;
+}
+
 bool Options::biharmonic() const {
   return biharmonicCheck->checkState() == Qt::Checked;
 }
@@ -167,6 +171,11 @@ Options::Options(Viewer *viewer, DomainWindow *domain_window) :
   C1Check->setChecked(true);
   geometryLayout->addWidget(C1Check);
   connect(C1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
+
+  mergeC1Check = new QCheckBox("C1 ribbon inner merge");
+  mergeC1Check->setChecked(true);
+  geometryLayout->addWidget(mergeC1Check);
+  connect(mergeC1Check, &QCheckBox::checkStateChanged, viewer, &Viewer::reload);
 
   hwidthCheck = new QCheckBox("Cross-reparameterization");
   hwidthCheck->setChecked(false);
